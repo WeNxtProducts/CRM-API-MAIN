@@ -7,7 +7,7 @@ package com.vi.extended.modules.fileattributes;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import com.google.gson.JsonArray;
+//import com.google.gson.JsonArray;
 
 
 public interface FileAttributesServiceCustom {
