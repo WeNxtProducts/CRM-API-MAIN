@@ -10,9 +10,9 @@ import java.io.IOException;
 @EnableAuthFilter
 @EnableApiException
 @SpringBootApplication
-public class ReInsuranceApplication {
+public class CrmApplication {
 	public static void main(String[] args) throws IOException {
-		SpringApplication.run(ReInsuranceApplication.class, args);
+		SpringApplication.run(CrmApplication.class, args);
 
 	}
 
