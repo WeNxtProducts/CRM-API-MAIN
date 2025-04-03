@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vi.base.modules.quotes.QuoteService;
 import com.vi.base.modules.users.UserService;
 import com.vi.model.dao.QuoteDAO;
+import com.vi.model.dto.QuoteDTO;
 import com.vi.model.dto.QuoteDTOCustom;
 import com.vi.model.dto.SummaryDTO;
 import com.vi.model.dto.UserDTO;
@@ -80,7 +81,8 @@ public class QuoteControllerCustom {
     @Transactional
     @PutMapping("/FilterSource")
     public ResponseEntity<QuoteDTOCustom> update(@RequestBody QuoteDTOCustom quoteDTOCustom) {
-        if (quoteDTOCustom == null || quoteDTOCustom.getEnqSeqNo() == null || quoteDTOCustom.getUserSeqNo() == null || quoteDTOCustom.getIsAccepted() == null) {
+        if (quoteDTOCustom == null || quoteDTOCustom.getEnqSeqNo() == null || 
+            quoteDTOCustom.getUserSeqNo() == null || quoteDTOCustom.getIsAccepted() == null) {
             log.error("Bad request: Missing required fields.");
             return ResponseEntity.badRequest().build();
         }
@@ -93,17 +95,31 @@ public class QuoteControllerCustom {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
 
+            // First, check if there are any already accepted/rejected quotes and mark them as "done"
+            boolean hasExistingStatus = enquiryQuotes.stream()
+                .anyMatch(quote -> quote.getIsAccepted() != null && 
+                         !"done".equals(quote.getIsAccepted()));
+
+            if (hasExistingStatus) {
+                // Mark all existing quotes with status as "done"
+                enquiryQuotes.forEach(quote -> {
+                    if (quote.getIsAccepted() != null && !"done".equals(quote.getIsAccepted())) {
+                        quote.setIsAccepted("done");
+                    }
+                });
+                quoteRepositoryCustom.saveAll(enquiryQuotes);
+            }
+
+            // Now process the new status update
             for (QuoteDAO quote : enquiryQuotes) {
                 if (quote.getUserSeqNo() == null) {
                     log.error("Found quote with null UserSeqNo for EnqSeqNo: {}", quoteDTOCustom.getEnqSeqNo());
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 }
 
-                // Use the value provided in the request body
                 if (quoteDTOCustom.getUserSeqNo().equals(quote.getUserSeqNo())) {
                     quote.setIsAccepted(quoteDTOCustom.getIsAccepted());
                 } else {
-                    // Rejecting all others if one is accepted
                     if ("accept".equals(quoteDTOCustom.getIsAccepted())) {
                         quote.setIsAccepted("reject");
                     }
@@ -112,15 +128,20 @@ public class QuoteControllerCustom {
 
             quoteRepositoryCustom.saveAll(enquiryQuotes);
 
-            // Fetch and return the updated quote
-            return quoteRepositoryCustom.findByEnqSeqNoAndUserSeqNo(
+            // Find the updated quote(s) - now handling multiple results
+            List<QuoteDAO> updatedQuotes = quoteRepositoryCustom.findByEnqSeqNoAndUserSeqNo(
                     quoteDTOCustom.getEnqSeqNo(),
-                    quoteDTOCustom.getUserSeqNo())
-                .map(acceptedQuote -> ResponseEntity.ok().body(QuoteMapperCustom.INSTANCE.quoteDAOToQuoteDTOCustom(acceptedQuote)))
-                .orElseGet(() -> {
-                    log.error("Quote not found for EnqSeqNo: {}, UserSeqNo: {}", quoteDTOCustom.getEnqSeqNo(), quoteDTOCustom.getUserSeqNo());
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-                });
+                    quoteDTOCustom.getUserSeqNo());
+
+            if (updatedQuotes.isEmpty()) {
+                log.error("Quote not found for EnqSeqNo: {}, UserSeqNo: {}", 
+                         quoteDTOCustom.getEnqSeqNo(), quoteDTOCustom.getUserSeqNo());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            // Get the first matching quote (or implement your business logic to handle multiple)
+            QuoteDAO acceptedQuote = updatedQuotes.get(0);
+            return ResponseEntity.ok().body(QuoteMapperCustom.INSTANCE.quoteDAOToQuoteDTOCustom(acceptedQuote));
 
         } catch (Exception e) {
             log.error("Error updating quote status for EnqSeqNo: {}, UserSeqNo: {}. Error: {}", 
@@ -128,9 +149,7 @@ public class QuoteControllerCustom {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
-
-
+    
     @GetMapping("/Stats")
     public ResponseEntity<?> getBrokerCode( @RequestParam int userId) {
         String sql = "SELECT * FROM wn_quote_summary WHERE user_seq_no="+ userId;

@@ -18,6 +18,7 @@ import lombok.experimental.SuperBuilder;
 public class QuoteDTO {
 
     private Long quoteSeqNo;
+    private Long saleId;
     private Long enqSeqNo;
     private EnquiryDTO enquiry;
     private Long leadSeqNo;
@@ -29,6 +30,7 @@ public class QuoteDTO {
     private BigDecimal premium;
     private BigDecimal suggestedRate;
     private String quoteStatus = "Pending";
+    private Long quoteCount;
     private  String isAccepted;
     private Date createdAt;
     private Date updatedAt;

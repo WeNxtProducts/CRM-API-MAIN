@@ -23,6 +23,9 @@ public class QuoteDAO {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "QUOTE_SEQ_NO")
     private Long quoteSeqNo;
+    
+    @Column(name = "SALES_ID")
+    private Long saleId;
 
     @Column(name = "ENQ_SEQ_NO", nullable = false)
     private Long enqSeqNo;
@@ -61,6 +64,9 @@ public class QuoteDAO {
     
     @Column(name = "IS_ACCEPTED")
     private  String isAccepted;
+    
+    @Column(name = "QUOTE_COUNT")
+    private Long quoteCount;
 
     @Column(name = "CREATED_AT")
     @Temporal(TemporalType.TIMESTAMP)
@@ -72,6 +78,8 @@ public class QuoteDAO {
 
     @Column(name = "DELETED")
     private Boolean deleted=false;
+
+	
 		
 }
 

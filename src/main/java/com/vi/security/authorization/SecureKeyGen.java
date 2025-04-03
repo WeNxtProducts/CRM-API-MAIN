@@ -78,6 +78,7 @@ public class SecureKeyGen {
             return  null;
         }
     }
+    
     public static Boolean validatePassword(String plainPassword,String encryptedPassword) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         return decrypt(encryptedPassword).equals(plainPassword);
     }
