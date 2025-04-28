@@ -44,7 +44,8 @@ public class FilterSpecificationsBuilder<T> {
       } else if(json.get(s).getNodeType()==JsonNodeType.NUMBER) {
         params.add(new FilterCriteria(s, ":", json.get(s).asText()));
       }  else if(json.get(s).getNodeType()==JsonNodeType.STRING && json.get(s).asText().contains("__")) {
-        params.add(new FilterCriteria(s, "", json.get(s).asText()));
+    	System.out.print("-------------------heloo");
+        params.add(new FilterCriteria(s, "__", json.get(s).asText()));
       } else {
         params.add(new FilterCriteria(s, ":", json.get(s).asText()));
       }

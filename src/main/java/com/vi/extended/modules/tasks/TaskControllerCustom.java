@@ -71,25 +71,7 @@ public class TaskControllerCustom {
         }
     }
     
-    @GetMapping("/Stats")
-    public ResponseEntity<?> getBrokerCode() {
-        String sql = "SELECT * FROM wn_task_summary";
-        List<Object[]> queryResult = em.createNativeQuery(sql).getResultList();
-        
-        List<SummaryDTO> result = queryResult.stream()
-                .map(row -> new SummaryDTO(
-                        ((Number) row[0]).longValue(),  // userSeqNo
-                        ((Number) row[1]).longValue(),  // totalCount
-                        (BigDecimal) row[2],  // newlyAdded
-                        (BigDecimal) row[3],  // onPriority
-                        (BigDecimal) row[4],  // completed
-                        (String) row[5]       // monthTasks (JSON String)
-                ))
-                .toList();
-
-        return ResponseEntity.ok().body(result);
-    }
-
+    
     
     
     

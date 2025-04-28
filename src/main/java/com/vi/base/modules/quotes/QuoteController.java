@@ -77,21 +77,24 @@ public class QuoteController {
 	        newQuote.setProductName(quoteDTO.getProductName());
 	        newQuote.setPremium(quoteDTO.getPremium());
 	        newQuote.setQuoteStatus(quoteDTO.getQuoteStatus());
-	        newQuote.setCreatedAt(new Date());
-	        newQuote.setUpdatedAt(new Date());
+	        newQuote.setQuoteCreatedDate(new Date());
+	        newQuote.setQuoteUpdatedDate(new Date());
+	        newQuote.setQuoteCreatedBy(quoteDTO.getQuoteCreatedBy());
+	        newQuote.setQuoteUpdatedBy(quoteDTO.getQuoteUpdatedBy());
 	        newQuote.setDeleted(false);
+	        newQuote.setDeletedAt(quoteDTO.getDeletedAt());
+	        newQuote.setDeletedBy(quoteDTO.getDeletedBy());
 
 	        QuoteDTO savedQuote = quoteService.create(newQuote);
 	        createdQuotes.add(savedQuote);
+	        
+		    ActivityLogUtil.createActivityLog(savedQuote.getUserSeqNo() ,"QUOTE_CREATED", "Quotes created", activityLogService);
+
 	    }
 
-	    ActivityLogUtil.createActivityLog("QUOTE_CREATED", "Quotes created", activityLogService);
 
 	    return ResponseEntity.ok().body(createdQuotes);
 	}
-
-
-
 
 	@PutMapping("/update")
 	public ResponseEntity<QuoteDTO> update( @RequestBody QuoteDTO quoteDTO) {
@@ -100,6 +103,8 @@ public class QuoteController {
 		
 		return ResponseEntity.ok().body(quoteQuoteDTO);
 	}
+	
+	
 
 	@GetMapping("/filter")
 	public ResponseEntity<List<QuoteDTO>> filterData(@RequestParam(value = "search") String search) {
@@ -127,8 +132,9 @@ public class QuoteController {
 	}
 	
 	public class ActivityLogUtil {
-	    public static void createActivityLog(String quoteType,String quoteName, ActivityLogService activityLogService) {
+	    public static void createActivityLog(Long userSeqNo, String quoteType,String quoteName, ActivityLogService activityLogService) {
 	        ActivityLogDTO activityLogDTO = new ActivityLogDTO();
+	        activityLogDTO.setUserSeqNo(userSeqNo);
 	        activityLogDTO.setActivityLogDate(new Date(System.currentTimeMillis()));
 	        activityLogDTO.setActivityLogType(quoteType);
 	        activityLogDTO.setActivityLogDescription(quoteName);

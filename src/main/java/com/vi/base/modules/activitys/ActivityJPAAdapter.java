@@ -8,11 +8,13 @@ import jakarta.persistence.EntityNotFoundException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.vi.model.dao.ActivityDAO;
+import com.vi.model.dao.TaskDAO;
 import com.vi.model.dto.ActivityDTO;
 import com.vi.model.dto.ActivityDTO;
 import com.vi.model.dto.ActivityDTO;
 
 import com.vi.base.modules.activitys.ActivityMapper;
+import com.vi.base.modules.tasks.TaskRepository;
 import com.vi.base.modules.activitys.ActivityMapper;
 import com.vi.base.modules.activitys.ActivityMapper;
 //import com.vi.corelib.events.EventPublisher;
@@ -23,7 +25,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.io.IOException;
 import org.json.simple.parser.ParseException;
 
@@ -31,6 +39,10 @@ import org.json.simple.parser.ParseException;
 public class ActivityJPAAdapter implements ActivityPersistent {
 	@Autowired
 	ActivityRepository activityRepository;
+	
+	@Autowired
+	TaskRepository taskRepository;
+	
 
 	@Override
 	public List<ActivityDTO> fetchAll() {
@@ -94,4 +106,51 @@ public class ActivityJPAAdapter implements ActivityPersistent {
 		Specification<ActivityDAO> result = new FilterSpecificationsBuilder<ActivityDAO>().with(search).build();
 		return ActivityMapper.INSTANCE.activityDAOListToActivityDTOList(activityRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public ResponseEntity<Map<String, Object>> getCalendarData(Date startDate, Date endDate, Long userSeqNo) {
+	    try {
+	        // Fetch only activities for the specific user
+	        List<ActivityDAO> activities = activityRepository
+	                .findByUserSeqNoAndActivityStartDateBetween(userSeqNo, startDate, endDate);
+
+	        List<ActivityDAO> events = new ArrayList<>();
+	        List<ActivityDAO> appointments = new ArrayList<>();
+
+	        for (ActivityDAO activity : activities) {
+	            if ("EVENT".equalsIgnoreCase(activity.getActivityType())) {
+	                events.add(activity);
+	            } else if ("APPOINTMENT".equalsIgnoreCase(activity.getActivityType())) {
+	                appointments.add(activity);
+	            }
+	        }
+
+	        // Fetch only tasks for the specific user
+	        List<TaskDAO> tasks = taskRepository
+	                .findByUserSeqNoAndTaskDueDateBetween(userSeqNo, startDate, endDate);
+
+	        Map<String, Object> calendarData = new HashMap<>();
+	        calendarData.put("events", events);
+	        calendarData.put("appointments", appointments);
+	        calendarData.put("tasks", tasks);
+
+	        return ResponseEntity.ok(createResponse("success", "Calendar data fetched successfully", calendarData));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.badRequest()
+	                .body(createResponse("error", "Failed to fetch calendar data: " + e.getMessage(), null));
+	    }
+	}
+
+
+    // Helper method to format response
+    private Map<String, Object> createResponse(String status, String message, Object data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", status);
+        response.put("message", message);
+        response.put("data", data);
+        return response;
+    }
 }
+
+

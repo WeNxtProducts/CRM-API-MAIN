@@ -67,12 +67,6 @@ public class TaskController {
 		
 		var taskTaskDTO = taskService.create(taskDTO);
 		
-//		ActivityLogDTO activityLogDTO = new ActivityLogDTO(); 	
-//		activityLogDTO.setActivityLogDate(new Date(System.currentTimeMillis()));
-//		activityLogDTO.setActivityLogType("LEAD_CREATED");
-//		activityLogDTO.setActivityLogDescription( "Task created: " + taskTaskDTO.getTaskName());
-//		var activity = activityLogService.create(activityLogDTO);
-		
 		ActivityLogUtil.createActivityLog("LEAD_CREATED","Task created: " + taskTaskDTO.getTaskName(),activityLogService);
 		
 		return ResponseEntity.ok().body(taskTaskDTO);

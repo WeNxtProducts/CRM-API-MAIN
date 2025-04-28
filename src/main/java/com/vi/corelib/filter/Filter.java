@@ -1,19 +1,21 @@
 package com.vi.corelib.filter;
 
-import com.vi.corelib.UserInfo;
-import com.vi.corelib.utils.DateUtils;
-import reactor.util.annotation.Nullable;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.vi.corelib.UserInfo;
+import com.vi.corelib.utils.DateUtils;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import reactor.util.annotation.Nullable;
 
 public abstract class Filter {
 	public static String getDefault(String controller, @Nullable UserInfo userInfo, @Nullable HashMap<String, String> json) {
@@ -25,7 +27,7 @@ public abstract class Filter {
 	}
 
 	public static Matcher getMatcher(String search) {
-		Pattern pattern = Pattern.compile("(\\w+?)(:|<|>|like|in)(\\w+?),");
+		Pattern pattern = Pattern.compile("(\\w+?)(:|<|>|like|in)([^,]+),");
 		Matcher matcher = pattern.matcher(search + ",");
 		return matcher;
 	}
@@ -82,6 +84,7 @@ public abstract class Filter {
 	}
 
 	public static Predicate getFilter(Root root, CriteriaQuery query, CriteriaBuilder builder, FilterCriteria criteria) {
+		System.out.println("---------------------------Leadcreation"+ criteria);
 		if (criteria.getOperation().equalsIgnoreCase(">=")) {
 			return builder.greaterThanOrEqualTo(
 					root.<String>get(criteria.getKey()), criteria.getValue().toString());
@@ -146,12 +149,23 @@ public abstract class Filter {
 				return builder.equal(root.get(criteria.getKey()), criteria.getValue());
 			}
 		} else if (criteria.getOperation().equalsIgnoreCase("__") ||
-				criteria.getOperation().equalsIgnoreCase("RANGE") ||
-				criteria.getOperation().equalsIgnoreCase("BETWEEN")) {
-			return builder.and(
-					builder.greaterThanOrEqualTo(root.<String>get(criteria.getKey()), criteria.getValue().toString().substring(1, criteria.getValue().toString().indexOf("__") - 1)
-					), builder.lessThanOrEqualTo(root.<String>get(criteria.getKey()), criteria.getValue().toString().substring(criteria.getValue().toString().indexOf("__" + 1))));
+		         criteria.getOperation().equalsIgnoreCase("RANGE") ||
+		         criteria.getOperation().equalsIgnoreCase("BETWEEN")) {
+		    
+		    System.out.println("---- Inside BETWEEN operation ----");
+
+		    String[] dateRange = criteria.getValue().toString().split("__");
+
+		    // Parse the String dates into LocalDate (or java.util.Date based on your entity)
+		    LocalDate fromDate = LocalDate.parse(dateRange[0]);
+		    LocalDate toDate = LocalDate.parse(dateRange[1]);
+
+		    return builder.and(
+		        builder.greaterThanOrEqualTo(root.get(criteria.getKey()), fromDate),
+		        builder.lessThanOrEqualTo(root.get(criteria.getKey()), toDate)
+		    );
 		}
 		return null;
+
 	}
 }

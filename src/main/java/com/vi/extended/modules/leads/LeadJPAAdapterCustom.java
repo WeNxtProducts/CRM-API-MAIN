@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 public class LeadJPAAdapterCustom implements LeadPersistentCustom {
+	
 	@Autowired
 	LeadRepositoryCustom leadRepositoryCustom;
 
@@ -59,4 +60,6 @@ public class LeadJPAAdapterCustom implements LeadPersistentCustom {
 		leadRepositoryCustom.save(leadDAO);
 		return true;
 	}
+	
+	
 }

@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -192,7 +193,12 @@ public class EnquiryDAO {
     @Column(name = "DELETED_BY")
     private String deletedBy;
 	 
-    
+    @PostPersist
+    public void generateEnqRefId() {
+        if (this.enqRefId == null && this.enqSeqNo != null) {
+            this.enqRefId = String.format("E%07d", this.enqSeqNo);
+        }
+    }
     
 
 }

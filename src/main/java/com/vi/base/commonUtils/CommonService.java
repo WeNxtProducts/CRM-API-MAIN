@@ -4,5 +4,7 @@ import org.json.JSONException;
 
 public interface CommonService {
     String getMapQuery(Integer queryId, QueryParametersDTO queryParams) throws JSONException;
+
+//	Object convertStringToObject(String value, Class<?> fieldType);
 }
 

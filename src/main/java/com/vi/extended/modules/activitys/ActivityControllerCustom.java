@@ -49,8 +49,7 @@ public class ActivityControllerCustom {
             @RequestParam(value = "size", defaultValue = "1000") int size) {
 
         try {
-            // Convert JsonNode to mutable ObjectNode
-            ObjectNode mutableJson = json.deepCopy();
+        	ObjectNode mutableJson = json.deepCopy();
             mutableJson.remove("page");
             mutableJson.remove("size");
             mutableJson.put("deleted","false");

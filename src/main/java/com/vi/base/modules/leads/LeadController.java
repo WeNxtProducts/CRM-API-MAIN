@@ -63,17 +63,11 @@ public class LeadController {
 	}
 
 	@PostMapping("/create")
-	public ResponseEntity<LeadDTO> create( @RequestBody LeadDTO leadDTO) {
+	public ResponseEntity<LeadDTO> create( @RequestBody LeadDTO leadDTO ) {
 		
 		var leadLeadDTO = leadService.create(leadDTO); 
-		
-//		ActivityLogDTO activityLogDTO = new ActivityLogDTO(); 	
-//		activityLogDTO.setActivityLogDate(new Date(System.currentTimeMillis()));
-//		activityLogDTO.setActivityLogType("LEAD_CREATED");
-//		activityLogDTO.setActivityLogDescription( "Lead created: " + leadLeadDTO.getLeadName());
-//		var activity = activityLogService.create(activityLogDTO);
-		
-		ActivityLogUtil.createActivityLog("LEAD_CREATED","Lead created: " + leadLeadDTO.getLeadName(),activityLogService);
+			
+		ActivityLogUtil.createActivityLog(leadLeadDTO.getUserSeqNo(),"LEAD_CREATED","Lead created: " + leadLeadDTO.getLeadName(),activityLogService);
 		
 		return ResponseEntity.ok().body(leadLeadDTO);
 	}
@@ -92,8 +86,6 @@ public class LeadController {
 		
 		return ResponseEntity.ok().body(leadService.filterData(search));
 	}
-
-	
 
 
 	@GetMapping("/filter2")
@@ -116,8 +108,9 @@ public class LeadController {
 	}
 	
 	public class ActivityLogUtil {
-	    public static void createActivityLog(String leadType,String leadName, ActivityLogService activityLogService) {
+	    public static void createActivityLog(Long userSeqNo, String leadType,String leadName, ActivityLogService activityLogService) {
 	        ActivityLogDTO activityLogDTO = new ActivityLogDTO();
+	        activityLogDTO.setUserSeqNo(userSeqNo);
 	        activityLogDTO.setActivityLogDate(new Date(System.currentTimeMillis()));
 	        activityLogDTO.setActivityLogType(leadType);
 	        activityLogDTO.setActivityLogDescription(leadName);

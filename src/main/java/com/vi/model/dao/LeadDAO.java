@@ -84,6 +84,9 @@ public class LeadDAO {
 
     @Column(name = "LEAD_SOURCE")
     private String leadSource;
+    
+    @Column(name = "ENQ_COUNT")
+    private Long enqCount=0L;
 
     @Column(name = "REMAINDER_COUNT")
     private Long remainderCount=0L;
@@ -123,6 +126,13 @@ public class LeadDAO {
     
     @Column(name = "DELETED_BY")
     private String deletedBy;
+    
+    @PostPersist
+    public void generateLeadRefId() {
+        if (this.leadRefId == null && this.leadSeqNo != null) {
+            this.leadRefId = String.format("L%07d", this.leadSeqNo);
+        }
+    }
     
 }
 

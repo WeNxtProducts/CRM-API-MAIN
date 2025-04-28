@@ -15,20 +15,6 @@ import jakarta.transaction.Transactional;
 
 public interface EnquiryServiceCustom extends BaseService<EnquiryDTOCustom> {
 	
-//	@Autowired
-//	private EnquiryRepositoryCustom enquiryRepositoryCustom;
-//
-//	@Transactional
-//	public static EnquiryDTOCustom updateRemainderCount(Long enquirySeqNo) {
-//		var enquiryDAO = enquiryRepositoryCustom.findById(enquiryDTOCustom.getEnquirySeqNo())
-//				 .orElseThrow(() -> new EntityNotFoundException("Record not found with id: " + enquiryDTOCustom.getEnquirySeqNo()));
-//		
-//	    System.out.println("Before Increment: " + enquiry.getRemainderCount());
-//	    enquiryDTOCustom.setRemainderCount(enquiryDTOCustom.getRemainderCount() + 1); // Increment count
-//	    System.out.println("After Increment: " + enquiryDTOCustom.getRemainderCount());
-//
-//	    enquiryRepositoryCustom.save(enquiryDTOCustom);
-//	    return new EnquiryDTOCustom(enquiry);
-//	}
+
 
 }

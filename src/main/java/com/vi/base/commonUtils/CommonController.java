@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/common")
 public class CommonController {
-    
+	
     @Autowired
     private CommonService service;
     

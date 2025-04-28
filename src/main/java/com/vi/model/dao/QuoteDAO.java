@@ -1,6 +1,7 @@
 package com.vi.model.dao;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
@@ -23,6 +24,9 @@ public class QuoteDAO {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "QUOTE_SEQ_NO")
     private Long quoteSeqNo;
+    
+    @Column(name = "QUOTE_REF_ID")
+    private String quoteRefID;
     
     @Column(name = "SALES_ID")
     private Long saleId;
@@ -63,23 +67,44 @@ public class QuoteDAO {
     private String quoteStatus;
     
     @Column(name = "IS_ACCEPTED")
-    private  String isAccepted;
+    private  String isAccepted="Todo";
     
     @Column(name = "QUOTE_COUNT")
     private Long quoteCount;
+    
+    @Column(name = "CURR_UNDERWRITER")
+    private Long currUnderwriter;
 
-    @Column(name = "CREATED_AT")
+    @Column(name = "QUOTE_CREATED_DATE")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    private Date quoteCreatedDate=Date.from(Instant.now());
 
-    @Column(name = "UPDATED_AT")
+    @Column(name = "QUOTE_UPDATED_DATE")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    private Date quoteUpdatedDate;
+    
+    @Column(name = "QUOTE_CREATED_BY")
+    private String quoteCreatedBy;
+    
+    @Column(name = "QUOTE_UPDATED_BY")
+    private String quoteUpdatedBy;
 
     @Column(name = "DELETED")
     private Boolean deleted=false;
+    
+    @Column(name = "DELETED_AT")
+    private Date deletedAt;
+    
+    @Column(name = "DELETED_BY")
+    private String deletedBy;
+   
 
-	
+    @PostPersist
+    public void generateQuoteRefId() {
+        if (this.quoteRefID == null && this.quoteSeqNo != null) {
+            this.quoteRefID = String.format("Q%07d", this.quoteSeqNo);
+        }
+    }
 		
 }
 

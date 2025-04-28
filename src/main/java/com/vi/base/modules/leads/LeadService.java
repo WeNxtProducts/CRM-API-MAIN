@@ -13,4 +13,5 @@ import com.vi.model.dto.LeadDTO;
 
 public interface LeadService extends FilterService<LeadDTO> {
 
+
 }

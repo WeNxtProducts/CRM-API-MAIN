@@ -19,13 +19,25 @@ import lombok.experimental.SuperBuilder;
 public class SummaryDTO  {
  
 	private Long userSeqNo;
+    private String userRole;
     private Long totalCount;
-    private BigDecimal newlyAdded ;
+    private BigDecimal newlyAdded;
     private BigDecimal onPriority;
     private BigDecimal completed;
+    private Long totalEnquiry;
+    private Long pendingEnquiry;
+    private Long meetingReqEnquiry;
+    private Long infoReqEnquiry;
+    private Long infoProEnquiry;
+    private Long quoteReqEnquiry;
+    private Long quoteGenEnquiry;
+    private Long accEnquiry;
+    private Long rejEnquiry;
+    private Long totalQuote;
+    private Long totalProspect;
     private String monthLeads;
-   
-
+    private String monthEnquiries;
+    
 }
     
 	

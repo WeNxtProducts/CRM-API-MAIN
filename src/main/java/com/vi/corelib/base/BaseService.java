@@ -1,6 +1,9 @@
 package com.vi.corelib.base;
 
+import java.time.LocalDate;
 import java.util.List;
+
+import com.vi.model.dto.LeadDTOCustom;
 
 public interface BaseService<T> {
   List<T> fetchAll();

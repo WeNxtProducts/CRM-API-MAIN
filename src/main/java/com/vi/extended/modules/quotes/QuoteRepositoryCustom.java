@@ -17,5 +17,6 @@ import com.vi.model.dao.QuoteDAO;
 public interface QuoteRepositoryCustom extends JpaRepository<QuoteDAO,Long> {
     List<QuoteDAO> findByEnqSeqNo(Long enqSeqNo);
     
-    List<QuoteDAO> findByEnqSeqNoAndUserSeqNo(Long enqSeqNo, Long userSeqNo);
+    List<QuoteDAO> findByEnqSeqNoAndUserSeqNo(Long enqSeqNo, Long userSeqNo);	
+	
 }

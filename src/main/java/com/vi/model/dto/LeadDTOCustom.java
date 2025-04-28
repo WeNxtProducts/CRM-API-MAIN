@@ -50,6 +50,7 @@ public class LeadDTOCustom  {
 	    private String leadStatus ="Todo";
 	    private String leadPriority;
 	    private String leadSource;
+	    private Long enqCount=0L;
 	    private Long remainderCount=0L;
 	    private Long leadAssignedTo;
 	    private String leadCreatedBy;

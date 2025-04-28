@@ -31,6 +31,8 @@ public class UserDTO  {
     private String userRole; 
     private String userPassword;
     private String assignedTo; 
+    private String assignedToName;
+    private String assignedToEmail;
     private String createdBy;
     private Date createdDate=Date.from(Instant.now());;
     private String updatedBy;
@@ -38,6 +40,10 @@ public class UserDTO  {
     private Boolean deleted=false;
     private Date deletedAt;
     private String deletedBy;
+    private String currUnderwriter;
+    private String currUnderwriterName;
+    private String currUnderwriterEmail;
+
 
 
 }

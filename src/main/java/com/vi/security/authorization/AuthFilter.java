@@ -11,12 +11,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 //import javax.security.sasl.AuthenticationException;
-
 //import jakarta.persistence.EntityNotFoundException;
 //import javax.security.sasl.AuthenticationException;
 import jakarta.servlet.FilterChain;
@@ -92,6 +90,7 @@ public class AuthFilter extends OncePerRequestFilter implements EnvironmentAware
             //      return;
             // }
         }
+        
         try {
             CustomResponseWrapper capturingResponseWrapper = new CustomResponseWrapper(
                     (HttpServletResponse) response);

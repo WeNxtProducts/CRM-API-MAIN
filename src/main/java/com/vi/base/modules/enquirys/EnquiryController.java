@@ -5,10 +5,12 @@
 package com.vi.base.modules.enquirys;
 
 import java.sql.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
@@ -25,8 +27,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vi.base.modules.activitylogs.ActivityLogService;
+import com.vi.base.modules.leads.LeadRepository;
 import com.vi.base.modules.quotes.QuoteRepository;
 import com.vi.base.modules.quotes.QuoteService;
+import com.vi.model.dao.LeadDAO;
 import com.vi.model.dao.QuoteDAO;
 import com.vi.model.dto.ActivityLogDTO;
 import com.vi.model.dto.EnquiryDTO;
@@ -50,8 +54,12 @@ public class EnquiryController {
 
 	@Autowired
 	EnquiryRepository enquiryRepository;
+	
 	@Autowired
 	QuoteRepository quoteRepository;
+	
+	@Autowired
+	LeadRepository leadRepository;
 
 	@GetMapping("/all")
 	public ResponseEntity<List<EnquiryDTO>> getAll(@Nullable @RequestParam HashMap<String, String> json,
@@ -75,18 +83,38 @@ public class EnquiryController {
 
 	@PostMapping("/create")
 	public ResponseEntity<EnquiryDTO> create(@RequestBody EnquiryDTO enquiryDTO) {
+
+		//changed1
 		var enquiryEnquiryDTO = enquiryService.create(enquiryDTO);
-		ActivityLogUtil.createActivityLog(enquiryEnquiryDTO.getEnqProdName(),
-				"Enquiry created: " + enquiryEnquiryDTO.getEnqName(), activityLogService);
-		return ResponseEntity.ok().body(enquiryEnquiryDTO);
+	    
+	    if(enquiryDTO.getLeadSeqNo() != null) {
+	        LeadDAO lead = leadRepository.findById(enquiryDTO.getLeadSeqNo())
+	            .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + enquiryDTO.getLeadSeqNo()));
+	        
+	        lead.setEnqCount(lead.getEnqCount() + 1);
+	        lead.setLeadStatus("In-progress");
+	        lead.setLeadUpdatedDate(Date.from(Instant.now()));
+	        leadRepository.save(lead);
+	    }
+	    
+	    //enquiryEnquiryDTO.getEnqN()
+	    
+	    ActivityLogUtil.createActivityLog(enquiryEnquiryDTO.getUserSeqNo(), enquiryEnquiryDTO.getEnqProdName(),
+	            "Enquiry created: " + enquiryEnquiryDTO.getEnqName(), activityLogService);
+
+	    return ResponseEntity.ok().body(enquiryEnquiryDTO);
 	}
 
 	@PutMapping("/update")
 	public ResponseEntity<EnquiryDTO> update(@RequestBody EnquiryDTO enquiryDTO) {
+		
+		 // Set updated date to NOW
+            enquiryDTO.setEnqUpdatedDate(Date.from(Instant.now()));
 
-		var updatedEnquiry = enquiryService.update(enquiryDTO);
-		System.out.println("log" + updatedEnquiry);
-		if (enquiryDTO.getEnqSeqNo() != null) {
+			var updatedEnquiry = enquiryService.update(enquiryDTO);
+			System.out.println("log" + updatedEnquiry);
+		
+			if (enquiryDTO.getEnqSeqNo() != null) {
 
 			List<QuoteDAO> test = quoteRepository.findByEnqSeqNo(enquiryDTO.getEnqSeqNo());
 			String status = mapEnquiryStatusToQuoteStatus(enquiryDTO.getEnqStatus());
@@ -94,7 +122,22 @@ public class EnquiryController {
 					.collect(Collectors.toList());
 			quoteRepository.saveAll(updatedList);
 
-		}
+			}
+		
+			if(enquiryDTO.getEnqSeqNo() != null) 
+			{
+			
+			if ("accEnq".equals(enquiryDTO.getEnqStatus()) || "rejEnq".equals(enquiryDTO.getEnqStatus())) {
+				
+		    LeadDAO lead = leadRepository.findById(enquiryDTO.getLeadSeqNo())
+		        .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + enquiryDTO.getLeadSeqNo()));
+		    
+		    lead.setLeadStatus("Done");
+		    lead.setLeadUpdatedDate(Date.from(Instant.now()));
+		    leadRepository.save(lead);
+			}
+			
+			}
 
 		return ResponseEntity.ok().body(updatedEnquiry);
 	}
@@ -103,21 +146,23 @@ public class EnquiryController {
 		if (enqStatus == null)
 			return null;
 
-		switch (enqStatus.toLowerCase()) {
+		switch (enqStatus) {
 		case "pending":
 			return "pending";
-		case "inforeq":
-			return "inforeq";
-		case "infopro":
-			return "infopro";
-		case "quotereq":
-			return "quotereq";
-		case "quotegen":
-			return "quotegen";
-		case "accepted":
-			return "accepted";
-		case "rejected":
-			return "rejected";
+		case "meetingReq":
+			return "meetingReq";
+		case "infoReq":
+			return "infoReq";
+		case "infoPro":
+			return "infoPro";
+		case "quoteReq":
+			return "quoteReq";
+		case "quoteGen":
+			return "quoteGen";
+		case "accEnq":
+			return "accEnq";
+		case "rejEnq":
+			return "rejEnq";
 		default:
 			return enqStatus;
 		}
@@ -146,11 +191,12 @@ public class EnquiryController {
 	public ResponseEntity<Boolean> deleteOne(@PathVariable Long id) {
 		return ResponseEntity.ok().body(enquiryService.delete(id));
 	}
-
+	
 	public class ActivityLogUtil {
-		public static void createActivityLog(String enqProdName, String enqName,
+		public static void createActivityLog(Long userSeqNo, String enqProdName, String enqName,
 				ActivityLogService activityLogService) {
 			ActivityLogDTO activityLogDTO = new ActivityLogDTO();
+	        activityLogDTO.setUserSeqNo(userSeqNo);
 			activityLogDTO.setActivityLogDate(new Date(System.currentTimeMillis()));
 			activityLogDTO.setActivityLogType(enqProdName);
 			activityLogDTO.setActivityLogDescription(enqName);

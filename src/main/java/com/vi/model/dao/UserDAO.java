@@ -60,20 +60,24 @@ public class UserDAO {
     @Column(name = "USER_ROLE")
     private String userRole; 
     
-    @Column(name = "ASSIGNED TO")
-    private String assignedTo; 
+    @Column(name = "ASSIGNED_TO")
+    private String assignedTo;
+    
+    @Column(name = "ASSIGNED_TO_NAME")
+    private String assignedToName;
+    
+    @Column(name = "ASSIGNED_TO_EMAIL")
+    private String assignedToEmail;
     
     @Column(name = "CREATED_BY")
     private String createdBy;
 
-    //@Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CREATED_DATE")
     private Date createdDate;
 
     @Column(name = "UPDATED_BY")
     private String updatedBy;
 
-    //@Temporal(TemporalType.TIMESTAMP)
     @Column(name = "UPDATED_DATE")
     private Date updatedDate;
     
@@ -85,6 +89,15 @@ public class UserDAO {
     
     @Column(name = "DELETED_BY")
     private String deletedBy;
+    
+    @Column(name = "CURRENT_UNDWRITER")
+    private String currUnderwriter;
+    
+    @Column(name = "CURRENT_UNDWRITER_NAME")
+    private String currUnderwriterName;
+    
+    @Column(name = "CURRENT_UNDWRITER_EMAIL")
+    private String currUnderwriterEmail;
 
 }
 
