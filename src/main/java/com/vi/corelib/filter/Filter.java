@@ -2,6 +2,8 @@ package com.vi.corelib.filter;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -149,23 +151,36 @@ public abstract class Filter {
 				return builder.equal(root.get(criteria.getKey()), criteria.getValue());
 			}
 		} else if (criteria.getOperation().equalsIgnoreCase("__") ||
-		         criteria.getOperation().equalsIgnoreCase("RANGE") ||
-		         criteria.getOperation().equalsIgnoreCase("BETWEEN")) {
-		    
-		    System.out.println("---- Inside BETWEEN operation ----");
+			    criteria.getOperation().equalsIgnoreCase("RANGE") ||
+			    criteria.getOperation().equalsIgnoreCase("BETWEEN")) {
 
-		    String[] dateRange = criteria.getValue().toString().split("__");
+			    System.out.println("---- Inside BETWEEN operation ----");
 
-		    // Parse the String dates into LocalDate (or java.util.Date based on your entity)
-		    LocalDate fromDate = LocalDate.parse(dateRange[0]);
-		    LocalDate toDate = LocalDate.parse(dateRange[1]);
+			 // Parse the String dates into LocalDate
+			    String[] dateRange = criteria.getValue().toString().split("__");
 
-		    return builder.and(
-		        builder.greaterThanOrEqualTo(root.get(criteria.getKey()), fromDate),
-		        builder.lessThanOrEqualTo(root.get(criteria.getKey()), toDate)
-		    );
-		}
-		return null;
+			    LocalDate fromDate = LocalDate.parse(dateRange[0]);
+			    LocalDate toDate = LocalDate.parse(dateRange[1]);
+
+			    // Convert to LocalDateTime to handle time parts
+			    LocalDateTime fromDateTime = fromDate.atStartOfDay(); // 2025-03-29 00:00:00
+			    LocalDateTime toDateTime = toDate.plusDays(1).atStartOfDay().minusNanos(1); // 2025-04-28 23:59:59.999999999
+
+			    // Convert LocalDateTime to java.util.Date
+			    Date fromDateConverted = Date.from(fromDateTime.atZone(ZoneId.systemDefault()).toInstant());
+			    Date toDateConverted = Date.from(toDateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+//			    System.out.println("############################### From: " + fromDateConverted);
+//			    System.out.println("############################### To: " + toDateConverted);
+
+			    return builder.and(
+			        builder.greaterThanOrEqualTo(root.get(criteria.getKey()), fromDateConverted),
+			        builder.lessThanOrEqualTo(root.get(criteria.getKey()), toDateConverted)
+			    );
+
+			}
+			return null;
+
 
 	}
 }

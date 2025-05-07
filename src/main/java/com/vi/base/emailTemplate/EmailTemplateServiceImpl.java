@@ -1,663 +1,514 @@
-//package com.vi.base.emailTemplate;
-//
-//import java.lang.reflect.Field;
-//import java.time.LocalDateTime;
-//import java.util.HashMap;
-//import java.util.List;
-//import java.util.Map;
-//import java.util.Properties;
-//import java.util.Set;
-//
-//import org.json.JSONException;
-//import org.json.JSONObject;
-//import org.jsoup.Jsoup;
-//import org.jsoup.nodes.Document;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.jdbc.support.rowset.SqlRowSet;
-//import org.springframework.mail.javamail.JavaMailSender;
-//import org.springframework.stereotype.Service;
-//import org.springframework.web.multipart.MultipartFile;
-//
-//import com.vi.base.commonUtils.CommonDao;
-//import com.vi.base.commonUtils.CommonService;
-//import com.vi.base.commonUtils.LOVDTO;
-//import com.vi.base.commonUtils.QUERY_MASTER;
-//import com.vi.base.commonUtils.QueryParamMasterDTO;
-//import com.vi.base.logging.EmailLogsDTO;
-//import com.vi.model.dao.LjmEmailTemplateDAO;
-//
-//import jakarta.activation.DataHandler;
-//import jakarta.mail.Message;
-//import jakarta.mail.Multipart;
-//import jakarta.mail.PasswordAuthentication;
-//import jakarta.mail.Session;
-//import jakarta.mail.Transport;
-//import jakarta.mail.internet.InternetAddress;
-//import jakarta.mail.internet.MimeBodyPart;
-//import jakarta.mail.internet.MimeMessage;
-//import jakarta.mail.internet.MimeMultipart;
-//import jakarta.mail.util.ByteArrayDataSource;
-//import jakarta.servlet.http.HttpServletRequest;
-//
-//@Service
-//public class EmailTemplateServiceImpl implements EmailTemplateService {
-//	
-//	@Autowired
-//	private EmailTemplateRepo emailTemplateRepo;
-//	
-//	@Autowired
-//	private EmailTemplateParamRepo emailTemplateParamRepo;
-//	
-////	@Autowired
-////	private AutoDispSetupRepo autoDispSetupRepo;
-//	
-//	@Autowired
-//	private CommonService commonServiceImpl;
-//	
-//	@Autowired
-//	private CommonDao commonDao;
-//	
-//	@SuppressWarnings("unused")
-//	@Autowired
-//	private JavaMailSender javaMailSender;
-//	
-////	@Autowired
-////	private LoggerFunctionService loggingService;
-//	
-//	@Value("${spring.success.code}")
-//	private String successCode;
-//
-//	@Value("${spring.error.code}")
-//	private String errorCode;
-//
-//	@Value("${spring.warning.code}")
-//	private String warningCode;
-//
-//	@Value("${spring.message.code}")
-//	private String messageCode;
-//
-//	@Value("${spring.status.code}")
-//	private String statusCode;
-//
-//	@Value("${spring.data.code}")
-//	private String dataCode;
-//	
-//	static final String username = "dineshbalamurugan85@gmail.com";
-//	static final String appPassword = "bwrlxbcytzgcbvjb";
-//
-////	@Override
-////	public String createNewTemplate(EmailTemplateRequest emailTemplateDto) throws Exception {
-////		JSONObject response = new JSONObject();
-////		JSONObject data = new JSONObject();
-////
-////		try {
-////			LJM_EMAIL_TEMPLATE template = new LJM_EMAIL_TEMPLATE();
-////
-////			Map<String, Map<String, String>> fieldMaps = new HashMap<>();
-////			fieldMaps.put("frontForm", emailTemplateDto.getFrontForm().getFormFields());
-////			for (Map.Entry<String, Map<String, String>> entry : fieldMaps.entrySet()) {
-////				setTemplateFields(template, entry.getValue());
-////			}
-////
-////			try {
-////				LJM_EMAIL_TEMPLATE savedTemplate = emailTemplateRepo.save(template);
-////				response.put(statusCode, successCode);
-////				response.put(messageCode, "Email Template Details created successfully");
-////				data.put("Id", savedTemplate.getET_SYS_ID());
-////				response.put("data", data);
-////			} catch (Exception e) {
-////				response.put("statusCode", errorCode);
-////				response.put("message", "An error occurred: " + e.getMessage());
-////			}
-////		} catch (Exception e) {
-////			e.printStackTrace();
-////			response.put("statusCode", errorCode);
-////			response.put("message", "An error occurred: " + e.getMessage());
-////		}
-////
-////		return response.toString();
-////	}
-////
-////	private void setTemplateFields(LJM_EMAIL_TEMPLATE template, Map<String, String> value) throws Exception {
-////		for (Map.Entry<String, String> entry : value.entrySet()) {
-////			setTemplateField(template, entry.getKey(), entry.getValue());
-////		}
-////	}
-////
-////	private void setTemplateField(LJM_EMAIL_TEMPLATE template, String key, String value) throws Exception {
-////		try {
-////			Field field = LJM_EMAIL_TEMPLATE.class.getDeclaredField(key);
-////			Class<?> fieldType = field.getType();
-////			Object convertedValue = commonServiceImpl.convertStringToObject(value, fieldType);
-////			String setterMethodName = "set" + key;
-////			if (value != null && !value.isEmpty()) {
-////				Method setter = LJM_EMAIL_TEMPLATE.class.getMethod(setterMethodName, fieldType);
-////				setter.invoke(template, convertedValue);
-////			}
-////		} catch (NoSuchFieldException e) {
-//////			e.printStackTrace();
-////		}
-////	}
-////
-////	@Override
-////	public String updateTemplate(EmailTemplateRequest emailTemplateModel, Integer templateId) {
-////		JSONObject response = new JSONObject();
-////
-////		try {
-////			Integer claimCoverId = templateId;
-////			Optional<LJM_EMAIL_TEMPLATE> optionalUser = emailTemplateRepo.findById(claimCoverId);
-////			LJM_EMAIL_TEMPLATE claim = optionalUser.get();
-////			if (claim != null) {
-////				Map<String, Map<String, String>> fieldMaps = new HashMap<>();
-////				fieldMaps.put("frontForm", emailTemplateModel.getFrontForm().getFormFields());
-////				for (Map.Entry<String, Map<String, String>> entry : fieldMaps.entrySet()) {
-////					setTemplateFields(claim, entry.getValue());
-////				}
-////
-////				try {
-////					LJM_EMAIL_TEMPLATE savedClaimDetails = emailTemplateRepo.save(claim);
-////					response.put(statusCode, successCode);
-////					response.put(messageCode, "Email Template Details Updated Successfully");
-////				} catch (Exception e) {
-////					response.put("statusCode", errorCode);
-////					response.put("message", "An error occurred: " + e.getMessage());
-////				}
-////			}
-////		} catch (Exception e) {
-////			e.printStackTrace();
-////			response.put("statusCode", errorCode);
-////			response.put("message", "An error occurred: " + e.getMessage());
-////		}
-////
-////		return response.toString();
-////	}
-////
-////	@Override
-////	public String deleteTemplate(Integer templateId) {
-////		JSONObject response = new JSONObject();
-////		try {
-////			LJM_EMAIL_TEMPLATE existingTemplate = emailTemplateRepo.getById(templateId);
-////			if (existingTemplate != null) {
-////				emailTemplateRepo.deleteById(templateId);
-////
-////				response.put(statusCode, successCode);
-////				response.put(messageCode, "Email Template Details Deleted Successfully");
-////			} else {
-////				response.put(statusCode, errorCode);
-////				response.put(messageCode, "No Such Template Exists");
-////			}
-////		} catch (Exception e) {
-////			response.put(statusCode, errorCode);
-////			response.put(messageCode, e.getMessage());
-////		}
-////		return response.toString();
-////	}
-////
-////	@Override
-////	public String getTemplate(HttpServletRequest request, String screenCode, String screenName, Integer templateId) {
-////		JSONObject response = new JSONObject();
-////		String result = null;
-////		try {
-////			LJM_EMAIL_TEMPLATE existingTemplate = emailTemplateRepo.getById(templateId);
-////			if (existingTemplate != null) {
-////				response.put(statusCode, successCode);
-////				response.put(messageCode, "Email Template Details Fetched Successfully");
-////				 ObjectMapper mapper = new ObjectMapper();
-////				  Map<String, Object> templateData = mapper.convertValue(existingTemplate, Map.class);
-////				  
-////				  
-////				  JSONObject getObject = new JSONObject(templateData);
-////				  
-////				  result = commonServiceImpl.newEditTabs(request, getObject);
-////				  
-////				response.put(dataCode, templateData);
-////			} else {
-////				response.put(statusCode, errorCode);
-////				response.put(messageCode, "No Such Template Exists");
-////			}
-////		} catch (Exception e) {
-////			response.put(statusCode, errorCode);
-////			response.put(messageCode, e.getMessage());
-////			e.printStackTrace();
-////		}
-////		return result;
-////	}
-////
-////	@Override
-////	public String createTemplateParam(EmailTemplateRequest emailTemplateParams, Integer templateId) {
-////		JSONObject response = new JSONObject();
-////		JSONObject data = new JSONObject();
-////
-////		try {
-////			LJM_EMAIL_PARAM templateParam = new LJM_EMAIL_PARAM();
-////
-////			Map<String, Map<String, String>> fieldMaps = new HashMap<>();
-////			fieldMaps.put("frontForm", emailTemplateParams.getEmailParams().getFormFields());
-////			fieldMaps.get("frontForm").put("EP_ET_SYS_ID", templateId.toString());
-////			for (Map.Entry<String, Map<String, String>> entry : fieldMaps.entrySet()) {
-////				setTemplateParamFields(templateParam, entry.getValue());
-////			}
-////
-////			try {
-////				LJM_EMAIL_PARAM savedTemplate = emailTemplateParamRepo.save(templateParam);
-////				response.put(statusCode, successCode);
-////				response.put(messageCode, "Email Template Param Created Successfully");
-////				data.put("Id", savedTemplate.getEP_SYS_ID());
-////				response.put("data", data);
-////			} catch (Exception e) {
-////				response.put("statusCode", errorCode);
-////				response.put("message", "An error occurred: " + e.getMessage());
-////			}
-////		} catch (Exception e) {
-////			e.printStackTrace();
-////			response.put("statusCode", errorCode);
-////			response.put("message", "An error occurred: " + e.getMessage());
-////		}
-////
-////		return response.toString();
-////	}
-////
-////	private void setTemplateParamFields(LJM_EMAIL_PARAM templateParam, Map<String, String> value) throws Exception{
-////		for (Map.Entry<String, String> entry : value.entrySet()) {
-////			setTemplateParamField(templateParam, entry.getKey(), entry.getValue());
-////		}
-////	}
-////
-////	private void setTemplateParamField(LJM_EMAIL_PARAM templateParam, String key, String value) throws Exception{
-////		try {
-////			Field field = LJM_EMAIL_PARAM.class.getDeclaredField(key);
-////			Class<?> fieldType = field.getType();
-////			Object convertedValue = null;
-////			if(fieldType == LJM_EMAIL_TEMPLATE.class) {
-////				convertedValue = getForeignObject(value);
-////			}else {
-////			convertedValue = commonServiceImpl.convertStringToObject(value, fieldType);
-////			}
-////			String setterMethodName = "set" + key;
-////			if (value != null && !value.isEmpty()) {
-////				Method setter = LJM_EMAIL_PARAM.class.getMethod(setterMethodName, fieldType);
-////				setter.invoke(templateParam, convertedValue);
-////			}
-////		} catch (NoSuchFieldException e) {
-//////			e.printStackTrace();
-////		}
-////	}
-////
-////	private LJM_EMAIL_TEMPLATE getForeignObject(String value) {
-////		LJM_EMAIL_TEMPLATE template = emailTemplateRepo.getById(Integer.parseInt(value));
-////		return template;
-////	}
-////
-////	@Override
-////	public String updateTemplateParam(EmailTemplateRequest emailTemplateParams, Integer tempParamId) {
-////		JSONObject response = new JSONObject();
-////
-////		try {
-////			Integer templateParamId = tempParamId;
-////			Optional<LJM_EMAIL_PARAM> optionalUser = emailTemplateParamRepo.findById(templateParamId);
-////			LJM_EMAIL_PARAM templateParam = optionalUser.get();
-////			if (templateParam != null) {
-////				Map<String, Map<String, String>> fieldMaps = new HashMap<>();
-////				fieldMaps.put("frontForm", emailTemplateParams.getEmailParams().getFormFields());
-////				for (Map.Entry<String, Map<String, String>> entry : fieldMaps.entrySet()) {
-////					setTemplateParamFields(templateParam, entry.getValue());
-////				}
-////
-////				try {
-////					LJM_EMAIL_PARAM savedParamDetails = emailTemplateParamRepo.save(templateParam);
-////					response.put(statusCode, successCode);
-////					response.put(messageCode, "Email Template Param Updated Successfully");
-////				} catch (Exception e) {
-////					response.put("statusCode", errorCode);
-////					response.put("message", "An error occurred: " + e.getMessage());
-////				}
-////			}
-////		} catch (Exception e) {
-////			e.printStackTrace();
-////			response.put("statusCode", errorCode);
-////			response.put("message", "An error occurred: " + e.getMessage());
-////		}
-////
-////		return response.toString();
-////	}
-////
-////	@Override
-////	public String deleteTemplateParam(Integer templateId) {
-////		JSONObject response = new JSONObject();
-////		try {
-////			LJM_EMAIL_PARAM existingTemplate = emailTemplateParamRepo.getById(templateId);
-////			if (existingTemplate != null) {
-////				emailTemplateParamRepo.deleteById(templateId);
-////
-////				response.put(statusCode, successCode);
-////				response.put(messageCode, "Email Template Details Deleted Successfully");
-////			} else {
-////				response.put(statusCode, errorCode);
-////				response.put(messageCode, "No Such Template Exists");
-////			}
-////		} catch (Exception e) {
-////			response.put(statusCode, errorCode);
-////			response.put(messageCode, e.getMessage());
-////		}
-////		return response.toString();
-////	}
-////
-////	@Override
-////	public String getTemplateParam(HttpServletRequest request, String screenCode, String screenName, Integer templateId) {
-////		JSONObject response = new JSONObject();
-////		String result = null;
-////		try {
-////			LJM_EMAIL_PARAM existingTemplate = emailTemplateParamRepo.getById(templateId);
-////			if (existingTemplate != null) {
-////				response.put(statusCode, successCode);
-////				response.put(messageCode, "Email Template Details Fetched Successfully");
-////				 ObjectMapper mapper = new ObjectMapper();
-////				  Map<String, Object> templateData = mapper.convertValue(existingTemplate, Map.class);
-////				  
-////				  if(existingTemplate.getEP_TYPE().equals("Q")) {
-////					  QUERY_MASTER query = commonDao.getQueryLov(Integer.parseInt(existingTemplate.getEP_VALUE()));
-////					  templateData.put("EP_QUERY", query.getQM_QUERY());
-////				  }
-////				  
-////				  JSONObject getObject = new JSONObject(templateData);
-////				  
-////				  result = commonServiceImpl.newEditTabs(request, getObject);
-////				  
-////				response.put(dataCode, templateData);
-////			} else {
-////				response.put(statusCode, errorCode);
-////				response.put(messageCode, "No Such Template Exists");
-////			}
-////		} catch (Exception e) {
-////			response.put(statusCode, errorCode);
-////			response.put(messageCode, e.getMessage());
-////			e.printStackTrace();
-////		}
-////		return result;
-////	}
-////
-//	@Override
-//	public String sendMail(Integer templateId, EmailRequestModel inputObject, HttpServletRequest request)throws Exception {
-//		
-//		Map<String, MultipartFile> multiPartList = new HashMap<>();
-//
-//		JSONObject response = new JSONObject();
-//		try {
-//			String to = "dineshbalamurugan85@gmail.com";
-//			String from = "dineshbalamurugan85@gmail.com";
-//			String host = "smtp.gmail.com";
-//
-//			Properties properties = System.getProperties();
-//			properties.put("mail.smtp.auth", "true");
-//			properties.put("mail.smtp.port", "587");
-//			properties.setProperty("mail.smtp.host", host);
-//			properties.setProperty("mail.smtp.starttls.enable", "true");
-//
-//			Session session = Session.getInstance(properties, new jakarta.mail.Authenticator() {
-//				protected PasswordAuthentication getPasswordAuthentication() {
-//					return new PasswordAuthentication(username, "beja kxnm kdsa zkyx");
-//				}
-//			});
-//
-//			LjmEmailTemplateDAO emailTemplate = emailTemplateRepo.getById(templateId);
-//			List<LJM_EMAIL_PARAM> emailTemplateParams = emailTemplateParamRepo.getParams(templateId);
-//			Map<String, Object> paramMap = new HashMap<>(inputObject.getContent());
-//			StringBuilder toIds = new StringBuilder();
-//			StringBuilder ccIds = new StringBuilder();
-//			StringBuilder bccIds = new StringBuilder();
-//			for (LJM_EMAIL_PARAM param : emailTemplateParams) {
-//				if (param.getEP_TYPE().equals("S")) {
-//					if (param.getEP_PARAM_NAME().equals("to")) {
-//						toIds.append(param.getEP_VALUE() + ",");
-//					} else if (param.getEP_PARAM_NAME().equals("cc")) {
-//						ccIds.append(param.getEP_VALUE() + ",");
-//					} else if (param.getEP_PARAM_NAME().equals("bcc")) {
-//						bccIds.append(param.getEP_VALUE() + ",");
-//					} else {
-//						paramMap.put(param.getEP_PARAM_NAME(), param.getEP_VALUE());
-//					}
-//				} else if (param.getEP_TYPE().equals("Q")) {
-//					List<QueryParamMasterDTO> queryParams = commonDao.getQueryParams(Integer.parseInt(param.getEP_VALUE()));
-//					Map<String, Object> emailTemplateQueryParams = processEmailTemplateParams(queryParams, inputObject.getContent());
-//					if (param.getEP_PARAM_NAME().equals("to")) {
-//						QUERY_MASTER queryMaster = commonDao.getQueryLov(Integer.parseInt(param.getEP_VALUE()));
-//						String query = queryMaster.getQM_QUERY();
-//						SqlRowSet result = commonDao.executeQuery(query, emailTemplateQueryParams);
-//
-//						while (result.next()) {
-//							toIds.append(result.getObject(1) + ",");
-//							paramMap.put(param.getEP_PARAM_NAME(), result.getObject(1));
-//						}
-//					} else if (param.getEP_PARAM_NAME().equals("cc")) {
-//						QUERY_MASTER queryMaster = commonDao.getQueryLov(Integer.parseInt(param.getEP_VALUE()));
-//						String query = queryMaster.getQM_QUERY();
-//						SqlRowSet result = commonDao.executeQuery(query, emailTemplateQueryParams);
-//
-//						while (result.next()) {
-//							ccIds.append(result.getObject(1) + ",");
-//							paramMap.put(param.getEP_PARAM_NAME(), result.getObject(1));
-//						}
-//					} else if (param.getEP_PARAM_NAME().equals("bcc")) {
-//						QUERY_MASTER queryMaster = commonDao.getQueryLov(Integer.parseInt(param.getEP_VALUE()));
-//						String query = queryMaster.getQM_QUERY();
-//						SqlRowSet result = commonDao.executeQuery(query, emailTemplateQueryParams);
-//
-//						while (result.next()) {
-//							bccIds.append(result.getObject(1) + ",");
-//							paramMap.put(param.getEP_PARAM_NAME(), result.getObject(1));
-//						}
-//					} else {
-//						QUERY_MASTER queryMaster = commonDao.getQueryLov(Integer.parseInt(param.getEP_VALUE()));
-//						String query = queryMaster.getQM_QUERY();
-//						SqlRowSet result = commonDao.executeQuery(query, emailTemplateQueryParams);
-//						while (result.next()) {
-//							paramMap.put(param.getEP_PARAM_NAME(), result.getObject(1));
-//						}
-//					}
-//				} else if (param.getEP_TYPE().equals("P")) {
-//					if (param.getEP_PARAM_NAME().equals("to")) {
-//						toIds.append(inputObject.getContent().get(param.getEP_PARAM_NAME()) + ",");
-//					} else if (param.getEP_PARAM_NAME().equals("cc")) {
-//						ccIds.append(inputObject.getContent().get(param.getEP_PARAM_NAME()) + ",");
-//					} else if (param.getEP_PARAM_NAME().equals("bcc")) {
-//						bccIds.append(inputObject.getContent().get(param.getEP_PARAM_NAME()) + ",");
-//					} else {
-//						paramMap.put(param.getEP_PARAM_NAME(), inputObject.getContent().get(param.getEP_PARAM_NAME()));
-//					}
-//				}
-//			}
-//
-//			
-//			MimeMessage message = new MimeMessage(session);
-//			message.setFrom(new InternetAddress(from));
-//			if (inputObject.getToIds() != null && inputObject.getToIds().size() > 0) {
-//				for (String ids : inputObject.getToIds()) {
-//					toIds.append(ids + ",");
-//				}
-//			}
-//
-//			if (inputObject.getCcIds() != null && inputObject.getCcIds().size() > 0) {
-//				for (String ccId : inputObject.getCcIds()) {
-//					ccIds.append(ccId + ",");
-//				}
-//			}
-//			if (inputObject.getBccIds() != null && inputObject.getBccIds().size() > 0) {
-//				for (String bccId : inputObject.getBccIds()) {
-//					bccIds.append(bccId + ",");
-//				}
-//			}
-//			if (inputObject.getSubject() != null || !inputObject.getSubject().isEmpty()) {
-//				paramMap.put("subject", inputObject.getSubject());
-//			}
-//			
-//			StringBuilder attachments = new StringBuilder();
-//			if (inputObject.getAttachments() != null && inputObject.getAttachments().size() > 0) {
-//				Set<String> keys = inputObject.getAttachments().keySet();
-//				for (String key : keys) {
-//					
-//
-//					attachments.append(key + ",");
-//					BASE64DecodedMultipartFile conv = new BASE64DecodedMultipartFile(
-//							inputObject.getAttachments().get(key));
-//					multiPartList.put(key, conv);
-//				}
-//			}
-//			
-//			Set<String> fileName = multiPartList.keySet();
-//			
-//			if(toIds.length() > 1) {
-//			toIds.deleteCharAt(toIds.length() - 1);
-//			}
-//			
-//			if(ccIds.length() > 1) {
-//			ccIds.deleteCharAt(ccIds.length() - 1);
-//			}
-//			
-//			if(bccIds.length() > 1) {
-//			bccIds.deleteCharAt(bccIds.length() - 1);
-//			}
-//			
-//
-//			InternetAddress[] recipients = InternetAddress.parse(toIds.toString());
-//			InternetAddress[] toRecipients = InternetAddress.parse(ccIds.toString());
-//			InternetAddress[] bccRecipients = InternetAddress.parse(bccIds.toString());
-//			message.addRecipients(Message.RecipientType.TO, recipients);
-//			message.addRecipients(Message.RecipientType.CC, toRecipients);
-//			message.addRecipients(Message.RecipientType.BCC, bccRecipients);
-//
-//			Document document = Jsoup.parse(emailTemplate.getEtMsgBody());
-//
-//			String formattedString = document.outerHtml();
-//
-//			for (Map.Entry<String, Object> entry : paramMap.entrySet()) {
-//				formattedString = formattedString.replace("$" + entry.getKey(), entry.getValue().toString());
-//			}
-//
-//			message.setSubject(paramMap.get("subject").toString());
-//			message.setText(formattedString);
-//
-//			MimeBodyPart mimeBodyPart = new MimeBodyPart();
-//			mimeBodyPart.setContent(formattedString, "text/html");
-//
-//			Multipart multipart = new MimeMultipart();
-//			multipart.addBodyPart(mimeBodyPart);
-//			
-//			for (String filename : fileName) {
-//			    MimeBodyPart attachmentPart = new MimeBodyPart();
-//			    String contentType = "application/octet-stream";
-//			    if (filename.endsWith(".pdf")) {
-//			        contentType = "application/pdf";
-//			    } else if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
-//			        contentType = "image/jpeg";
-//			    } else if (filename.endsWith(".json")) {
-//			        contentType = "application/json";
-//			    }
-//			    
-//			    attachmentPart.setDataHandler(new DataHandler(new ByteArrayDataSource(multiPartList.get(filename).getBytes(), contentType)));
-//			    attachmentPart.setFileName(filename);
-//			    multipart.addBodyPart(attachmentPart);
-//}
-//			
-//			if(attachments.toString().length() > 0) {
-//			attachments.deleteCharAt(attachments.toString().length()-1);
-//			}
-//			message.setContent(multipart);
-//
-//			Transport.send(message);
-//			
-//			 Document doc = Jsoup.parse(formattedString);
-//		     String con = doc.text();
-//		     
-//			
-//			EmailLogsDTO logs = new EmailLogsDTO();
-//			logs.setTo(toIds.toString());
-//			logs.setTemplateName(emailTemplate.getEtTempName());
-//			logs.setTemplateBody(con);
-//			logs.setGenDate(LocalDateTime.now());
-//			logs.setAttachments(attachments.toString()); 
-////			loggingService.logToEmailHistoryLogs(logs, request);
-//			response.put(statusCode, successCode);
-//			response.put(messageCode, "Mail Sent Successfully");
-//		} catch (Exception e) {
-//			response.put(statusCode, errorCode);
-//			response.put(messageCode, e.getMessage());
-//			e.printStackTrace();
-//		}
-//
-//		return response.toString();
-//	}
-//
-//	private Map<String, Object> processEmailTemplateParams(List<QueryParamMasterDTO> queryParams, Map<String, Object> map) {
-//		Map<String, Object> emailTemplateQueryParams = new HashMap<>();
-//		for(QueryParamMasterDTO param : queryParams) {
-//			if(map.get(param.getQPM_PARAM_NAME()) != null) {
-//			emailTemplateQueryParams.put(param.getQPM_PARAM_NAME(), map.get(param.getQPM_PARAM_NAME()));
-//			}
-//		}
-//		return emailTemplateQueryParams;
-//	}
-//
-////	@Override
-////	public String startAutoDispatch(String eventId) {
-////		JSONObject response = new JSONObject();
-////
-////		try {
-////			if (!eventId.startsWith("EVNT_")) {
-////				AutoDispSetup autoDispatchDetails = autoDispSetupRepo.getByEventId(eventId);
-////				if(autoDispatchDetails.getADS_ACTIVE_YN().equals("Y")) {
-////					
-////				}else {
-////					response.put(statusCode, successCode);
-////					response.put(messageCode, "The Event is Not Active");
-////				}
-////			} else {
-////				response.put(statusCode, successCode);
-////				response.put(messageCode, "Please Enter the Correct Event Id");
-////			}
-////		} catch (Exception e) {
-////			response.put(statusCode, errorCode);
-////			response.put(messageCode, e.getMessage());
-////		}
-////		return response.toString();
-////	}
-//
-//	@Override
-//	public String getEmailQueries()throws Exception {
-//		JSONObject response = new JSONObject();
-//		QUERY_MASTER query = commonDao.getQueryLov(75);
-//		
-//		if(query != null) {
-//			List<LOVDTO> queryList = commonDao.executeLOVQuery(query.getQM_QUERY(), null);
-//			
-//			response.put(statusCode, successCode);
-//			response.put(messageCode, "List Of Query Details Fetched Successfully");
-//			response.put(dataCode, queryList);
-//		}else {
-//			response.put(statusCode, errorCode);
-//			response.put(messageCode, "Can't get query to get List of Email Queries");
-//		}
-//		return response.toString();
-//	}
-//
-//	@Override
-//	public String getParams() throws Exception {
-//		JSONObject response = new JSONObject();
-//		
-//		QUERY_MASTER query = commonDao.getQueryLov(250);
-//		
-//		if(query != null) {
-//			List<LOVDTO> queryList = commonDao.executeLOVQuery(query.getQM_QUERY(), null);
-//			
-//			response.put(statusCode, successCode);
-//			response.put(messageCode, "List Of Available Parameters Fetched Successfully");
-//			response.put(dataCode, queryList);
-//		}else {
-//			response.put(statusCode, errorCode);
-//			response.put(messageCode, "Can't get query to get List of Parameters");
-//		}
-//		
-//		return response.toString();
-//	}
-//
-//}
+package com.vi.base.emailTemplate;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.vi.base.commonUtils.CommonDao;
+import com.vi.base.commonUtils.LOVDTO;
+import com.vi.base.commonUtils.QUERY_MASTER;
+import com.vi.base.logging.EmailLogsDTO;
+import com.vi.base.modules.enquirys.EnquiryRepository;
+import com.vi.base.modules.leads.LeadRepository;
+import com.vi.base.modules.quotes.QuoteRepository;
+import com.vi.base.modules.users.UserRepository;
+import com.vi.base.modules.workflows.WorkflowRepository;
+import com.vi.model.dao.EnquiryDAO;
+import com.vi.model.dao.LeadDAO;
+import com.vi.model.dao.LjmEmailTemplateDAO;
+import com.vi.model.dao.QuoteDAO;
+import com.vi.model.dao.UserDAO;
+import com.vi.model.dao.WorkflowDAO;
+
+import jakarta.activation.DataHandler;
+import jakarta.mail.Message;
+import jakarta.mail.Multipart;
+import jakarta.mail.PasswordAuthentication;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
+import jakarta.servlet.http.HttpServletRequest;
+
+@Service
+public class EmailTemplateServiceImpl implements EmailTemplateService {
+
+    @Autowired
+    private EmailTemplateRepo emailTemplateRepo;
+
+    @Autowired
+    private WorkflowRepository workFlowRepo;
+
+    @Autowired
+    private UserRepository userRepo;
+
+    @Autowired
+    private LeadRepository leadRepo;
+    
+    @Autowired
+    private EnquiryRepository enquiryRepo;
+    
+    @Autowired
+    private QuoteRepository quoteRepo;
+
+    @Autowired
+    private CommonDao commonDao;
+
+    @Value("${spring.success.code}")
+    private String successCode;
+
+    @Value("${spring.error.code}")
+    private String errorCode;
+
+    @Value("${spring.message.code}")
+    private String messageCode;
+
+    @Value("${spring.status.code}")
+    private String statusCode;
+
+    @Value("${spring.data.code}")
+    private String dataCode;
+
+    private static final String SMTP_USERNAME = "dineshbalamurugan85@gmail.com";
+    private static final String SMTP_PASSWORD = "beja kxnm kdsa zkyx";
+    private static final String SMTP_HOST = "smtp.gmail.com";
+    private static final int SMTP_PORT = 587;
+    private String FROM_NAME = "No Reply";
+
+    @Override
+    public String sendMail(EmailRequestModel inputObject, HttpServletRequest request) throws Exception {
+        Map<String, MultipartFile> attachments = inputObject.getAttachments() != null ? 
+        inputObject.getAttachments() : new HashMap<>();
+        JSONObject response = new JSONObject();
+
+        try {
+            // 1. Get workflow configuration
+            WorkflowDAO workflow = workFlowRepo.findByMasterTriggerIdAndWorkStepCompanyId(
+                inputObject.getMasterTriggerId(), 
+                inputObject.getWorkStepCompanyId()
+            );
+
+            if (!"Y".equals(workflow.getWorkStepMail()) || !"Y".equals(workflow.getNotificationStatus())) {
+                response.put(statusCode, errorCode);
+                response.put(messageCode, "Email notifications are disabled for this workflow");
+                return response.toString();
+            }
+
+            // 2. Get email template
+            LjmEmailTemplateDAO emailTemplate = emailTemplateRepo.findById(workflow.getEtSysId())
+                .orElseThrow(() -> new Exception("Email template not found for ID: " + workflow.getEtSysId()));
+
+            // 3. Get lead details
+            LeadDAO lead = leadRepo.findById(inputObject.getLeadSeqNo())
+                .orElseThrow(() -> new Exception("Lead not found with ID: " + inputObject.getLeadSeqNo()));
+
+            // 4. Determine sender and recipients based on role
+            EmailRecipients recipients = determineRecipients(lead, inputObject.getMasterTriggerId());
+
+            // 5. Get associated enquiry
+            EnquiryDAO enquiry = null;
+            Optional<EnquiryDAO> enquiryDetail = enquiryRepo.findByLeadSeqNo(inputObject.getLeadSeqNo());
+            if(enquiryDetail.isPresent()) {
+            	enquiry = enquiryDetail.get();
+            }
+//                .orElseThrow(() -> new Exception("Enquiry not found for lead ID: " + inputObject.getLeadSeqNo()));
+
+            // 6. Prepare template parameters
+            Map<String, Object> templateParams = prepareTemplateParameters(lead, enquiry, recipients);
+
+            // 7. Handle underwriter-specific cases
+            if (inputObject.getMasterTriggerId() >= 5 && inputObject.getMasterTriggerId() <= 12) {
+                handleUnderwriterEmails(inputObject, emailTemplate, lead, templateParams, attachments, response);
+            } else {
+                // 8. Send regular role-based email
+                sendRoleBasedEmail(emailTemplate, recipients, templateParams, attachments, response);
+            }
+
+            response.put(statusCode, successCode);
+            response.put(messageCode, "Emails sent successfully");
+
+        } catch (Exception e) {
+            response.put(statusCode, errorCode);
+            response.put(messageCode, "Error sending emails: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return response.toString();
+    }
+
+    private EmailRecipients determineRecipients(LeadDAO lead, Long masterTriggerId) {
+        EmailRecipients recipients = new EmailRecipients();
+        
+        if (lead.getUser().getUserRole().equalsIgnoreCase("Manager")) {
+            recipients.setManagerId(lead.getUser().getUserSeqNo());
+            recipients.setSalesId(lead.getLeadAssignedTo());
+        } else if (lead.getUser().getUserRole().equalsIgnoreCase("Sales")) {
+            recipients.setSalesId(lead.getUser().getUserSeqNo());
+            recipients.setManagerId(Long.parseLong(lead.getUser().getAssignedTo()));
+        }  
+        
+        // For quote-related triggers, get underwriters
+        if (masterTriggerId >= 5 && masterTriggerId <= 12) {
+            List<QuoteDAO> quotes = quoteRepo.findByLeadSeqNo(lead.getLeadSeqNo());
+            recipients.setUnderwriterIds(quotes.stream()
+                .filter(q -> "Todo".equalsIgnoreCase(q.getIsAccepted()))
+                .map(QuoteDAO::getUserSeqNo)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList()));
+        }
+        
+        return recipients;
+    }
+
+    private Map<String, Object> prepareTemplateParameters(LeadDAO lead, EnquiryDAO enquiry, EmailRecipients recipients) {
+        Map<String, Object> params = new HashMap<>();
+        
+        // Lead parameters
+        params.put("LeadName", lead.getLeadName());
+        params.put("LeadSeqNo", lead.getLeadSeqNo());
+        params.put("LeadRefId", lead.getLeadRefId());
+
+        
+        // Enquiry parameters
+        if(enquiry!=null) {
+        params.put("EnqName", enquiry.getEnqName());
+        params.put("EnqSeqNo", enquiry.getEnqSeqNo());
+        params.put("EnqRefId", enquiry.getEnqRefId());
+        params.put("EnqStatus", enquiry.getEnqStatus());
+        }
+        
+     // Quote parameters
+        List<QuoteDAO> quotes = quoteRepo.findByLeadSeqNo(lead.getLeadSeqNo());
+        if (!quotes.isEmpty()) {
+            params.put("QuoteStatus", quotes.get(0).getQuoteStatus());
+        } else {
+            params.put("QuoteStatus", "N/A");
+        }
+              
+        
+        // User parameters
+        userRepo.findById(recipients.getSalesId()).ifPresent(sales -> {
+            params.put("SalesName", sales.getUserName());
+            params.put("SalesSeqNo", sales.getUserSeqNo());
+            params.put("SalesRefId", sales.getUserRefId());
+
+            
+        });
+        
+        userRepo.findById(recipients.getManagerId()).ifPresent(manager -> {
+            params.put("ManagerName", manager.getUserName());
+            params.put("ManagerSeqNo", manager.getUserSeqNo());
+            params.put("ManagerRefId", manager.getUserRefId());
+
+        });
+        
+        return params;
+    }
+
+    private void handleUnderwriterEmails(EmailRequestModel inputObject, LjmEmailTemplateDAO template, LeadDAO lead, 
+                                        Map<String, Object> baseParams, 
+                                        Map<String, MultipartFile> attachments,
+                                        JSONObject response) throws Exception {
+        // Get all unique underwriters
+        List<QuoteDAO> quotes = quoteRepo.findByLeadSeqNo(lead.getLeadSeqNo());
+//        List<Long> underwriterIds = quotes.stream()
+//            .filter(q -> "Todo".equalsIgnoreCase(q.getIsAccepted()))
+//            .map(QuoteDAO::getUserSeqNo)
+//            .filter(Objects::nonNull)
+//            .distinct()
+//            .collect(Collectors.toList());
+        List<Long> underwriterIds = new ArrayList<>();
+        List<Long> todoTriggerIds = Arrays.asList(5L, 6L);
+        for (QuoteDAO quote : quotes) {
+            if (todoTriggerIds.contains(inputObject.getMasterTriggerId()) && "Todo".equalsIgnoreCase(quote.getIsAccepted()) && "Todo".equalsIgnoreCase(quote.getIsDone())) {
+                Long userSeqNo = quote.getUserSeqNo();
+                underwriterIds.add(userSeqNo);
+                
+            }
+        }
+        
+        List<Long> acceptTriggerIds = Arrays.asList(7L, 8L, 9L, 10L, 11L, 12L);
+        for (QuoteDAO quote : quotes) {
+            if (acceptTriggerIds.contains(inputObject.getMasterTriggerId()) && "accept".equalsIgnoreCase(quote.getIsAccepted()) && "Todo".equalsIgnoreCase(quote.getIsDone())) {
+                Long userSeqNo = quote.getUserSeqNo();
+                underwriterIds.add(userSeqNo);
+                // System.out.println(acceptTriggerIds.contains(inputObject.getMasterTriggerId()));
+            }
+        }
+        
+        if (!underwriterIds.isEmpty()) {
+            // Send to each underwriter
+            for (Long underwriterId : underwriterIds) {
+                UserDAO underwriter = userRepo.findById(underwriterId)
+                    .orElseThrow(() -> new Exception("Underwriter not found with ID: " + underwriterId));
+                
+                Map<String, Object> params = new HashMap<>(baseParams);
+                params.put("UnderwriterName", underwriter.getUserName());
+                params.put("UnderwriterSeqNo", underwriter.getUserSeqNo());
+                params.put("UnderwriterRefId", underwriter.getUserRefId());
+                                
+                sendSingleEmail(
+                    template,
+                    underwriter.getUserEmail(),
+                    null, // No specific recipient override
+                    params,
+                    attachments,
+                    response
+                );
+            }
+        } else {
+        	Object obj = Long.valueOf(baseParams.get("ManagerSeqNo").toString());
+        	long value = (Long) obj;
+            // Fallback to manager if no underwriters
+            sendRoleBasedEmail(template, 
+                new EmailRecipients(value, null, null), 
+                baseParams, 
+                attachments, 
+                response);
+        }
+    }
+
+    private void sendRoleBasedEmail(LjmEmailTemplateDAO template, 
+                                  EmailRecipients recipients,
+                                  Map<String, Object> params,
+                                  Map<String, MultipartFile> attachments,
+                                  JSONObject response) throws Exception {
+        String toEmail = null;
+        
+        // Determine primary recipient based on template configuration
+        if (template.getEtTo().equals("sId")) {
+//        	System.out.println(recipients.getSalesId() + "*");
+
+            toEmail = userRepo.findById(recipients.getSalesId())
+                .map(UserDAO::getUserEmail)
+                .orElse(null);
+        } else if (template.getEtTo().equals("mId")) {
+//        	System.out.println(recipients.getManagerId() + "*");
+            toEmail = userRepo.findById(recipients.getManagerId())
+                .map(UserDAO::getUserEmail)
+                .orElse(null);
+        }
+        
+        sendSingleEmail(template, toEmail, null, params, attachments, response);
+    }
+
+    private void sendSingleEmail(LjmEmailTemplateDAO template,
+                               String specificToEmail,
+                               String specificCcEmail,
+                               Map<String, Object> params,
+                               Map<String, MultipartFile> attachments,
+                               JSONObject response) throws Exception {
+        Session session = createMailSession();
+        MimeMessage message = new MimeMessage(session);
+
+        // Set basic headers
+//        
+//        LeadDAO lead = leadRepo.findById(inputObject.getLeadSeqNo())
+
+        
+        message.setFrom(new InternetAddress(SMTP_USERNAME, FROM_NAME));
+        message.setSubject(replacePlaceholders(template.getEtSubject(), params));
+
+        // Process recipients
+//        System.out.println(specificToEmail);
+        List<String> toEmails = new ArrayList<>();
+        if (specificToEmail != null) {
+//        	System.out.println(specificToEmail);
+            toEmails.add(specificToEmail);
+        } else {
+            toEmails.addAll(resolveRecipients(template.getEtTo(), params));
+        }
+        
+        List<String> ccEmails = new ArrayList<>();
+        if (specificCcEmail != null) {
+            ccEmails.add(specificCcEmail);
+        } else {
+            ccEmails.addAll(resolveRecipients(template.getEtCc(), params));
+        }
+        
+        List<String> bccEmails = resolveRecipients(template.getEtBcc(), params);
+
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(String.join(",", toEmails)));
+        message.setRecipients(Message.RecipientType.CC, InternetAddress.parse(String.join(",", ccEmails)));
+        message.setRecipients(Message.RecipientType.BCC, InternetAddress.parse(String.join(",", bccEmails)));
+
+        // Build email content
+        String formattedBody = replacePlaceholders(template.getEtMsgBody(), params);
+        MimeBodyPart textPart = new MimeBodyPart();
+        textPart.setContent(formattedBody, "text/html; charset=utf-8");
+
+        // Handle attachments
+        Multipart multipart = new MimeMultipart();
+        multipart.addBodyPart(textPart);
+        
+        for (Map.Entry<String, MultipartFile> entry : attachments.entrySet()) {
+            MimeBodyPart attachmentPart = new MimeBodyPart();
+            attachmentPart.setFileName(entry.getKey());
+            attachmentPart.setDataHandler(new DataHandler(
+                new ByteArrayDataSource(entry.getValue().getBytes(), getContentType(entry.getKey()))
+            ));
+            multipart.addBodyPart(attachmentPart);
+        }
+
+        message.setContent(multipart);
+        Transport.send(message);
+
+        logEmail(template, toEmails, ccEmails, formattedBody, attachments.keySet());
+    }
+
+    private Session createMailSession() {
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", SMTP_HOST);
+        props.put("mail.smtp.port", SMTP_PORT);
+
+        return Session.getInstance(props, new jakarta.mail.Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(SMTP_USERNAME, SMTP_PASSWORD);
+            }
+        });
+    }
+
+    private List<String> resolveRecipients(String recipientType, Map<String, Object> params) {
+        List<String> emails = new ArrayList<>();
+        
+        if (recipientType == null || recipientType.isEmpty()) {
+            return emails;
+        }
+        
+        switch (recipientType) {
+            case "sId":
+                if (params.get("SalesSeqNo") != null) {
+                    userRepo.findById((Long) params.get("SalesSeqNo"))
+                        .ifPresent(user -> emails.add(user.getUserEmail()));
+                }
+                break;
+            case "mId":
+                if (params.get("ManagerSeqNo") != null) {
+                    userRepo.findById((Long) params.get("ManagerSeqNo"))
+                        .ifPresent(user -> emails.add(user.getUserEmail()));
+                }
+                break;
+            case "uId":
+                if (params.get("UnderwriterSeqNo") != null) {
+                    userRepo.findById((Long) params.get("UnderwriterSeqNo"))
+                        .ifPresent(user -> emails.add(user.getUserEmail()));
+                }
+                break;
+            default:
+                // Assume it's a direct email address
+                emails.add(recipientType);
+        }
+        
+        return emails;
+    }
+
+    private String replacePlaceholders(String text, Map<String, Object> params) {
+        if (text == null) return "";
+        
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            if (entry.getValue() != null) {
+                text = text.replace("$" + entry.getKey(), entry.getValue().toString());
+            }
+        }
+        return text;
+    }
+
+    private String getContentType(String filename) {
+        if (filename.endsWith(".pdf")) return "application/pdf";
+        if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) return "image/jpeg";
+        if (filename.endsWith(".png")) return "image/png";
+        if (filename.endsWith(".doc") || filename.endsWith(".docx")) return "application/msword";
+        if (filename.endsWith(".xls") || filename.endsWith(".xlsx")) return "application/vnd.ms-excel";
+        return "application/octet-stream";
+    }
+
+    private void logEmail(LjmEmailTemplateDAO template, List<String> to, List<String> cc, 
+                        String body, Set<String> attachments) {
+        EmailLogsDTO log = new EmailLogsDTO();
+        log.setTo(String.join(",", to));
+//        log.setCc(String.join(",", cc));
+        log.setTemplateName(template.getEtTempName());
+        log.setTemplateBody(Jsoup.parse(body).text());
+        log.setGenDate(LocalDateTime.now());
+        log.setAttachments(String.join(",", attachments));
+        // Save to database or logging service
+    }
+
+    @Override
+    public String getEmailQueries() throws Exception {
+        JSONObject response = new JSONObject();
+        QUERY_MASTER query = commonDao.getQueryLov(75);
+        
+        if (query != null) {
+            List<LOVDTO> queryList = commonDao.executeLOVQuery(query.getQM_QUERY(), null);
+            response.put(statusCode, successCode);
+            response.put(messageCode, "List Of Query Details Fetched Successfully");
+            response.put(dataCode, queryList);
+        } else {
+            response.put(statusCode, errorCode);
+            response.put(messageCode, "Can't get query to get List of Email Queries");
+        }
+        return response.toString();
+    }
+
+    @Override
+    public String getParams() throws Exception {
+        JSONObject response = new JSONObject();
+        QUERY_MASTER query = commonDao.getQueryLov(250);
+        
+        if (query != null) {
+            List<LOVDTO> queryList = commonDao.executeLOVQuery(query.getQM_QUERY(), null);
+            response.put(statusCode, successCode);
+            response.put(messageCode, "List Of Available Parameters Fetched Successfully");
+            response.put(dataCode, queryList);
+        } else {
+            response.put(statusCode, errorCode);
+            response.put(messageCode, "Can't get query to get List of Parameters");
+        }
+        return response.toString();
+    }
+
+    // Helper class to manage recipients
+    private static class EmailRecipients {
+        private Long salesId;
+        private Long managerId;
+        private List<Long> underwriterIds;
+        
+        public EmailRecipients() {}
+        
+        public EmailRecipients(Long salesId, Long managerId, List<Long> underwriterIds) {
+            this.salesId = salesId;
+            this.managerId = managerId;
+            this.underwriterIds = underwriterIds;
+        }
+        
+        // Getters and setters
+        public Long getSalesId() { return salesId; }
+        public void setSalesId(Long salesId) { this.salesId = salesId; }
+        public Long getManagerId() { return managerId; }
+        public void setManagerId(Long managerId) { this.managerId = managerId; }
+        public List<Long> getUnderwriterIds() { return underwriterIds; }
+        public void setUnderwriterIds(List<Long> underwriterIds) { this.underwriterIds = underwriterIds; }
+    }
+}

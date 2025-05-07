@@ -10,6 +10,7 @@ import org.hibernate.annotations.NotFoundAction;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder.Default;
 import lombok.experimental.SuperBuilder;
 
 @Data
@@ -33,7 +34,8 @@ public class QuoteDTO {
     private BigDecimal suggestedRate;
     private String quoteStatus = "Pending";
     private Long quoteCount;
-    private  String isAccepted = "Todo";
+    private String isAccepted;
+    private  String isDone="Todo";
     private Long currUnderwriter;
     private Date quoteCreatedDate=Date.from(Instant.now());
     private String quoteCreatedBy;

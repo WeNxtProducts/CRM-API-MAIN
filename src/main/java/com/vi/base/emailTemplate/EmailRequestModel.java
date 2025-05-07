@@ -1,69 +1,51 @@
-//package com.vi.base.emailTemplate;
-//
-//import java.util.List;
-//import java.util.Map;
-//
-//public class EmailRequestModel {
-//	
-//	private List<String> toIds;
-//	
-//	private List<String> ccIds;
-//	
-//	private List<String> bccIds;
-//	
-//	private String subject;
-//	
-//	private Map<String, Object> content;
-//	
-//	private Map<String, byte[]> attachments;
-//
-//	public List<String> getToIds() {
-//		return toIds;
-//	}
-//
-//	public void setToIds(List<String> toIds) {
-//		this.toIds = toIds;
-//	}
-//
-//	public List<String> getCcIds() {
-//		return ccIds;
-//	}
-//
-//	public void setCcIds(List<String> ccIds) {
-//		this.ccIds = ccIds;
-//	}
-//
-//	public List<String> getBccIds() {
-//		return bccIds;
-//	}
-//
-//	public void setBccIds(List<String> bccIds) {
-//		this.bccIds = bccIds;
-//	}
-//
-//	public String getSubject() {
-//		return subject;
-//	}
-//
-//	public void setSubject(String subject) {
-//		this.subject = subject;
-//	}
-//
-//	public Map<String, Object> getContent() {
-//		return content;
-//	}
-//
-//	public void setContent(Map<String, Object> content) {
-//		this.content = content;
-//	}
-//
-//	public Map<String, byte[]> getAttachments() {
-//		return attachments;
-//	}
-//
-//	public void setAttachments(Map<String, byte[
-//	                                            ]> attachments) {
-//		this.attachments = attachments;
-//	}
-//
-//}
+package com.vi.base.emailTemplate;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+
+public class EmailRequestModel {
+
+
+	private Long masterTriggerId;
+	private Long workStepCompanyId;
+	private Long leadSeqNo;
+	private Long quoteSeqNo;
+
+	
+	private Map<String, MultipartFile> attachments;
+	public Long getMasterTriggerId() {
+		return masterTriggerId;
+	}
+	public void setMasterTriggerId(Long masterTriggerId) {
+		this.masterTriggerId = masterTriggerId;
+	}
+	public Long getWorkStepCompanyId() {
+		return workStepCompanyId;
+	}
+	public void setWorkStepCompanyId(Long workStepCompanyId) {
+		this.workStepCompanyId = workStepCompanyId;
+	}
+	public Long getLeadSeqNo() {
+		return leadSeqNo;
+	}
+	public void setLeadSeqNo(Long leadSeqNo) {
+		this.leadSeqNo = leadSeqNo;
+	}
+	public Map<String, MultipartFile> getAttachments() {
+		return attachments;
+	}
+	public void setAttachments(Map<String, MultipartFile> attachments) {
+		this.attachments = attachments;
+	}
+	public Long getQuoteSeqNo() {
+		return quoteSeqNo;
+	}
+	public void setQuoteSeqNo(Long quoteSeqNo) {
+		this.quoteSeqNo = quoteSeqNo;
+	}
+	
+	
+	
+}

@@ -5,6 +5,9 @@
 package com.vi.model.dto;
 
 import com.vi.model.BaseDto;
+import com.vi.model.dao.LjmEmailTemplateDAO;
+import com.vi.model.dao.MasterWorkflowDAO;
+
 import lombok.AllArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import lombok.Data;
@@ -21,15 +24,18 @@ import java.util.Date;
 public class WorkflowDTOCustom  {
  
 
-    private Long workStepId;
-    private String workStepDescription;    
-    private String notificationStatus;    
+	private Long workStepId;	
+	private Long etSysId;
+	private LjmEmailTemplateDAO template;
+    private Long masterTriggerId;
+	private MasterWorkflowDAO masterWorkflow;    
+    private String notificationStatus;
     private String workStepMail;    
-    private String workStepSms;
-    private String workStepWhatsApp;
-    private Long workStepCompanyId;
-    private Boolean deleted=false;
-    private Date deletedAt;
+    private String workStepSms;    
+    private String workStepWhatsApp;    
+    private Long workStepCompanyId;   
+    private Boolean deleted=false;    
+    private Date deletedAt;    
     private String deletedBy;
 
 }

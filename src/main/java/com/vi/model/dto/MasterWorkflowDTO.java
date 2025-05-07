@@ -6,7 +6,7 @@ package com.vi.model.dto;
 
 import com.vi.model.BaseDto;
 import com.vi.model.dao.LjmEmailTemplateDAO;
-import com.vi.model.dao.MasterWorkflowDAO;
+import com.vi.model.dao.WorkflowDAO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
@@ -32,22 +32,11 @@ import org.hibernate.annotations.NotFoundAction;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor 
-public class WorkflowDTO  {
+public class MasterWorkflowDTO  {
     
-    private Long workStepId;	
-	private Long etSysId;
-	private LjmEmailTemplateDAO template;
     private Long masterTriggerId;
-	private MasterWorkflowDAO masterWorkflow;    
-    private String notificationStatus;
-    private String workStepMail;    
-    private String workStepSms;    
-    private String workStepWhatsApp;    
-    private Long workStepCompanyId;   
-    private Boolean deleted=false;    
-    private Date deletedAt;    
-    private String deletedBy;
-
+    private String masterTriggerCode;
+    private String masterTriggerDescription;
 
 }
 	

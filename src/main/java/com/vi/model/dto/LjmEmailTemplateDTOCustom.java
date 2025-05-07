@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LjmEmailTemplateDTO {
+public class LjmEmailTemplateDTOCustom {
 
     private Long etSysId;
     private Long workStepId;

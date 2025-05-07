@@ -34,6 +34,7 @@ public class QuoteDTOCustom {
     private String quoteStatus = "Pending";
     private Long quoteCount;
     private  String isAccepted = "Todo";
+    private  String isDone="Todo";
     private Long currUnderwriter;
     private Date quoteCreatedDate=Date.from(Instant.now());
     private String quoteCreatedBy;

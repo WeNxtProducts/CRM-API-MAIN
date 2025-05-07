@@ -22,6 +22,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
@@ -35,7 +36,6 @@ import jakarta.persistence.Table;
 @Setter
 public class UserDAO {
     
-
     @Id
 	// @GeneratedValue(strategy = GenerationType.AUTO)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -98,6 +98,33 @@ public class UserDAO {
     
     @Column(name = "CURRENT_UNDWRITER_EMAIL")
     private String currUnderwriterEmail;
+    
+    @PostPersist
+    public void generateUserRefId() {
+        if (this.userRefId == null && this.userSeqNo != null && this.userRole != null) {
+            String prefix;
+
+            switch (userRole.toLowerCase()) {
+                case "manager":
+                    prefix = "M";
+                    break;
+                case "sales":
+                    prefix = "S";
+                    break;
+                case "underwriter":
+                    prefix = "U";
+                    break;
+                case "admin":
+                    prefix = "A";
+                    break;
+                default:
+                    prefix = "X"; // fallback for unknown roles
+            }
+
+            this.userRefId = String.format("%s%07d", prefix, this.userSeqNo);
+        }
+    }
+
 
 }
 

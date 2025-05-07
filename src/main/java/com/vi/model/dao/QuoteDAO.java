@@ -69,6 +69,9 @@ public class QuoteDAO {
     @Column(name = "IS_ACCEPTED")
     private  String isAccepted="Todo";
     
+    @Column(name = "IS_DONE")
+    private  String isDone="Todo";
+  
     @Column(name = "QUOTE_COUNT")
     private Long quoteCount;
     
@@ -105,6 +108,8 @@ public class QuoteDAO {
             this.quoteRefID = String.format("Q%07d", this.quoteSeqNo);
         }
     }
+
+
 		
 }
 

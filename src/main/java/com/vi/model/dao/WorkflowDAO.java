@@ -23,6 +23,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
@@ -39,14 +40,30 @@ import jakarta.persistence.Table;
 public class WorkflowDAO {
 
 	@Id
-	// @GeneratedValue(strategy = GenerationType.AUTO)
+//  @GeneratedValue(strategy = GenerationType.AUTO)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "WORK_STEP_ID")
     private Long workStepId;
+	
+	@Column(name = "ET_SYS_ID")
+	private Long etSysId;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@NotFound(action = NotFoundAction.IGNORE)
+	@JoinColumn(name="ET_SYS_ID", referencedColumnName = "ET_SYS_ID", insertable=false, updatable=false)
+	private LjmEmailTemplateDAO template;
 
-    @Lob
-    @Column(name = "WORK_STEP_DESCRIPTION")
-    private String workStepDescription;
+//    @Lob
+//    @Column(name = "WORK_STEP_DESCRIPTION")
+//    private String workStepDescription;
+    
+	@Column(name = "MASTER_TRIGGER_ID")
+    private Long masterTriggerId;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+    @NotFound(action = NotFoundAction.IGNORE)
+    @JoinColumn(name="MASTER_TRIGGER_ID", referencedColumnName = "MASTER_TRIGGER_ID", insertable=false, updatable=false)
+	private MasterWorkflowDAO masterWorkflow;
     
     @Column(name = "NOTIFICATION_STATUS")
     private String notificationStatus;

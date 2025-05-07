@@ -4,11 +4,14 @@
 
 package com.vi.base.modules.quotes;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
@@ -25,6 +28,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vi.base.modules.activitylogs.ActivityLogService;
+import com.vi.base.modules.leads.LeadRepository;
+import com.vi.model.dao.LeadDAO;
+import com.vi.model.dao.QuoteDAO;
 import com.vi.model.dto.ActivityLogDTO;
 import com.vi.model.dto.QuoteDTO;
 
@@ -39,7 +45,13 @@ public class QuoteController {
 	QuoteService quoteService;
 	
 	@Autowired
+	QuoteRepository quoteRepository;
+	
+	@Autowired
 	ActivityLogService activityLogService;
+	
+	@Autowired
+	LeadRepository leadRepository;
 
 	@GetMapping("/all")
 	public ResponseEntity<List<QuoteDTO>> getAll(
@@ -66,9 +78,29 @@ public class QuoteController {
 	public ResponseEntity<List<QuoteDTO>> create(@RequestBody List<QuoteDTO> quoteDTOList) {
 	    List<QuoteDTO> createdQuotes = new ArrayList<>();
 
+	    if (!quoteDTOList.isEmpty()) {
+	        Long enqSeqNo = quoteDTOList.get(0).getEnqSeqNo();
+
+	        // ✅ Step 1: Find all existing quotes for this EnqSeqNo
+	        List<QuoteDAO> existingQuotes = quoteRepository.findByEnqSeqNo(enqSeqNo);
+
+	        // ✅ Step 2: Mark all old quotes (Todo, accept, reject) as "done"
+	        for (QuoteDAO quote : existingQuotes) {
+	            String status = quote.getIsAccepted();
+	            if ("Todo".equalsIgnoreCase(status) || "accept".equalsIgnoreCase(status) || "reject".equalsIgnoreCase(status)) {
+	                quote.setIsDone("done"); 
+	            }
+	        }
+
+	        // ✅ Step 3: Save updated old quotes
+	        quoteRepository.saveAll(existingQuotes);
+	    }
+
+	    // 🔁 Step 4: Create new quotes
 	    for (QuoteDTO quoteDTO : quoteDTOList) {
 	        QuoteDTO newQuote = new QuoteDTO();
 	        newQuote.setEnqSeqNo(quoteDTO.getEnqSeqNo());
+	        newQuote.setSaleId(quoteDTO.getSaleId());
 	        newQuote.setLeadSeqNo(quoteDTO.getLeadSeqNo());
 	        newQuote.setUserSeqNo(quoteDTO.getUserSeqNo());
 	        newQuote.setQuoteDescription(quoteDTO.getQuoteDescription());
@@ -76,7 +108,8 @@ public class QuoteController {
 	        newQuote.setLobName(quoteDTO.getLobName());
 	        newQuote.setProductName(quoteDTO.getProductName());
 	        newQuote.setPremium(quoteDTO.getPremium());
-	        newQuote.setQuoteStatus(quoteDTO.getQuoteStatus());
+	        newQuote.setIsAccepted("Todo"); 
+	        newQuote.setQuoteStatus("quoteReq");
 	        newQuote.setQuoteCreatedDate(new Date());
 	        newQuote.setQuoteUpdatedDate(new Date());
 	        newQuote.setQuoteCreatedBy(quoteDTO.getQuoteCreatedBy());
@@ -87,24 +120,54 @@ public class QuoteController {
 
 	        QuoteDTO savedQuote = quoteService.create(newQuote);
 	        createdQuotes.add(savedQuote);
-	        
-		    ActivityLogUtil.createActivityLog(savedQuote.getUserSeqNo() ,"QUOTE_CREATED", "Quotes created", activityLogService);
 
+	        ActivityLogUtil.createActivityLog(savedQuote.getUserSeqNo(), "QUOTE_CREATED", "Quotes created", activityLogService);
 	    }
-
 
 	    return ResponseEntity.ok().body(createdQuotes);
 	}
 
+
 	@PutMapping("/update")
-	public ResponseEntity<QuoteDTO> update( @RequestBody QuoteDTO quoteDTO) {
-		
-		var quoteQuoteDTO = quoteService.update(quoteDTO);
-		
-		return ResponseEntity.ok().body(quoteQuoteDTO);
+	public ResponseEntity<QuoteDTO> update(@RequestBody QuoteDTO quoteDTO) {
+
+	    if (quoteDTO.getEnqSeqNo() != null) {
+
+	        // 1. Update Lead if status is accEnq or rejEnq
+	        if ("accEnq".equals(quoteDTO.getQuoteStatus()) || "rejEnq".equals(quoteDTO.getQuoteStatus())) {
+
+	            LeadDAO lead = leadRepository.findById(quoteDTO.getLeadSeqNo())
+	                .orElseThrow(() -> new ResourceNotFoundException(
+	                    "Lead not found with id: " + quoteDTO.getLeadSeqNo()));
+
+	            lead.setLeadStatus("Done");
+	            lead.setLeadUpdatedDate(Date.from(Instant.now()));
+	            leadRepository.save(lead);
+	        }
+
+	        // 2. Update the current quote
+	        QuoteDTO updatedQuote = quoteService.update(quoteDTO);
+
+	        // 3. Auto-reject other quotes for same EnqSeqNo
+	        if ("accEnq".equals(quoteDTO.getQuoteStatus())) {
+	            List<QuoteDAO> otherQuotes = quoteRepository.findByEnqSeqNo(quoteDTO.getEnqSeqNo()).stream()
+	                .filter(q -> !q.getQuoteSeqNo().equals(quoteDTO.getQuoteSeqNo())) 
+	                .collect(Collectors.toList());
+
+	            for (QuoteDAO q : otherQuotes) {
+	                if (!"rejEnq".equalsIgnoreCase(q.getQuoteStatus())) {
+	                    q.setQuoteStatus("rejEnq");
+	                }
+	            }
+	            
+	            quoteRepository.saveAll(otherQuotes);
+	        }
+
+	        return ResponseEntity.ok().body(updatedQuote);
+	    }
+
+	    return ResponseEntity.badRequest().build();
 	}
-	
-	
 
 	@GetMapping("/filter")
 	public ResponseEntity<List<QuoteDTO>> filterData(@RequestParam(value = "search") String search) {

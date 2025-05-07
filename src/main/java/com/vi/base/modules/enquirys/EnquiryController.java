@@ -8,6 +8,7 @@ import java.sql.Date;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.common.errors.ResourceNotFoundException;
@@ -84,7 +85,6 @@ public class EnquiryController {
 	@PostMapping("/create")
 	public ResponseEntity<EnquiryDTO> create(@RequestBody EnquiryDTO enquiryDTO) {
 
-		//changed1
 		var enquiryEnquiryDTO = enquiryService.create(enquiryDTO);
 	    
 	    if(enquiryDTO.getLeadSeqNo() != null) {
@@ -97,7 +97,6 @@ public class EnquiryController {
 	        leadRepository.save(lead);
 	    }
 	    
-	    //enquiryEnquiryDTO.getEnqN()
 	    
 	    ActivityLogUtil.createActivityLog(enquiryEnquiryDTO.getUserSeqNo(), enquiryEnquiryDTO.getEnqProdName(),
 	            "Enquiry created: " + enquiryEnquiryDTO.getEnqName(), activityLogService);
@@ -107,39 +106,49 @@ public class EnquiryController {
 
 	@PutMapping("/update")
 	public ResponseEntity<EnquiryDTO> update(@RequestBody EnquiryDTO enquiryDTO) {
-		
-		 // Set updated date to NOW
-            enquiryDTO.setEnqUpdatedDate(Date.from(Instant.now()));
+	    
+	    // Set updated date
+	    enquiryDTO.setEnqUpdatedDate(Date.from(Instant.now()));
+	    
+	    // Update the enquiry
+	    EnquiryDTO updatedEnquiry = enquiryService.update(enquiryDTO);
+	    System.out.println("log: " + updatedEnquiry);
 
-			var updatedEnquiry = enquiryService.update(enquiryDTO);
-			System.out.println("log" + updatedEnquiry);
-		
-			if (enquiryDTO.getEnqSeqNo() != null) {
+	    // Check if enquiry ID is valid
+	    if (enquiryDTO.getEnqSeqNo() != null) {
+	        
+	        // Map enquiry status to quote status
+	        String status = mapEnquiryStatusToQuoteStatus(enquiryDTO.getEnqStatus());
 
-			List<QuoteDAO> test = quoteRepository.findByEnqSeqNo(enquiryDTO.getEnqSeqNo());
-			String status = mapEnquiryStatusToQuoteStatus(enquiryDTO.getEnqStatus());
-			List<QuoteDAO> updatedList = test.stream().peek(quote -> quote.setQuoteStatus(status))
-					.collect(Collectors.toList());
-			quoteRepository.saveAll(updatedList);
+	        // Update only one quote using quoteSeqNo (not entire list)
+	        if (enquiryDTO.getQuoteSeqNo() != null) {
+	            Optional<QuoteDAO> optionalQuote = quoteRepository.findByQuoteSeqNo(enquiryDTO.getQuoteSeqNo());
+	            System.out.println(enquiryDTO.getQuoteSeqNo());
+	            if (optionalQuote.isPresent()) {
+	                QuoteDAO quote = optionalQuote.get();
+	                quote.setQuoteStatus(status);
+	                QuoteDAO save = quoteRepository.save(quote);
+	                updatedEnquiry.setQuoteDAO(save);
+	            } else {
+	                System.out.println("Quote not found with ID: " + enquiryDTO.getQuoteDAO().getQuoteSeqNo());
+	            }
+	        } else {
+	            System.out.println("QuoteDTO or QuoteSeqNo is null. Skipping quote update.");
+	        }
 
-			}
-		
-			if(enquiryDTO.getEnqSeqNo() != null) 
-			{
-			
-			if ("accEnq".equals(enquiryDTO.getEnqStatus()) || "rejEnq".equals(enquiryDTO.getEnqStatus())) {
-				
-		    LeadDAO lead = leadRepository.findById(enquiryDTO.getLeadSeqNo())
-		        .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + enquiryDTO.getLeadSeqNo()));
-		    
-		    lead.setLeadStatus("Done");
-		    lead.setLeadUpdatedDate(Date.from(Instant.now()));
-		    leadRepository.save(lead);
-			}
-			
-			}
+//	        // Update lead status if enquiry is accepted or rejected
+//	        if ("accEnq".equals(enquiryDTO.getEnqStatus()) || "rejEnq".equals(enquiryDTO.getEnqStatus())) {
+//
+//	            LeadDAO lead = leadRepository.findById(enquiryDTO.getLeadSeqNo())
+//	                .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + enquiryDTO.getLeadSeqNo()));
+//
+//	            lead.setLeadStatus("Done");
+//	            lead.setLeadUpdatedDate(Date.from(Instant.now()));
+//	            leadRepository.save(lead);
+//	        }
+	    }
 
-		return ResponseEntity.ok().body(updatedEnquiry);
+	    return ResponseEntity.ok().body(updatedEnquiry);
 	}
 
 	private String mapEnquiryStatusToQuoteStatus(String enqStatus) {

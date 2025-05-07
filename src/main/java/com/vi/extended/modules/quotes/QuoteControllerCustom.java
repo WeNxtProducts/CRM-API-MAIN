@@ -122,82 +122,79 @@ public class QuoteControllerCustom {
     }
 
 
-    @Transactional
-    @PutMapping("/isAccepted")
-    public ResponseEntity<?> updateQuoteStatus(@RequestBody QuoteDTOCustom quoteDTOCustom) {
-        try {
-            // 1. Validate input
-            if (quoteDTOCustom == null || quoteDTOCustom.getEnqSeqNo() == null ||
-                quoteDTOCustom.getUserSeqNo() == null || quoteDTOCustom.getIsAccepted() == null) {
-                return ResponseEntity.badRequest().body(
-                    Collections.singletonMap("error", "Missing required fields in request"));
-            }
+	@Transactional
+	@PutMapping("/isAccepted")
+	public ResponseEntity<?> updateQuoteStatus(@RequestBody QuoteDTOCustom quoteDTOCustom) {
+		try {
+			// 1. Validate input
+			if (quoteDTOCustom == null || quoteDTOCustom.getEnqSeqNo() == null || quoteDTOCustom.getUserSeqNo() == null
+					|| quoteDTOCustom.getIsAccepted() == null) {
+				return ResponseEntity.badRequest()
+						.body(Collections.singletonMap("error", "Missing required fields in request"));
+			}
 
-            // 2. Fetch all quotes for this enquiry
-            List<QuoteDAO> allQuotes = quoteRepositoryCustom.findByEnqSeqNo(quoteDTOCustom.getEnqSeqNo());
-            if (allQuotes.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    Collections.singletonMap("error", "No quotes found for EnqSeqNo: " + quoteDTOCustom.getEnqSeqNo()));
-            }
+			// 2. Fetch all quotes for this enquiry
+			List<QuoteDAO> allQuotes = quoteRepositoryCustom.findByEnqSeqNo(quoteDTOCustom.getEnqSeqNo());
+			if (allQuotes.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error",
+						"No quotes found for EnqSeqNo: " + quoteDTOCustom.getEnqSeqNo()));
+			}
 
-            // 3. Find the "Todo" quote for this user
-            QuoteDAO quoteToUpdate = allQuotes.stream()
-                .filter(q -> "Todo".equalsIgnoreCase(q.getIsAccepted()) && 
-                             quoteDTOCustom.getUserSeqNo().equals(q.getUserSeqNo()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException(
-                    String.format("Todo quote not found for UserSeqNo %d and EnqSeqNo %d. Available: %s",
-                        quoteDTOCustom.getUserSeqNo(),
-                        quoteDTOCustom.getEnqSeqNo(),
-                        allQuotes.stream()
-                            .map(q -> q.getUserSeqNo() + ":" + q.getIsAccepted())
-                            .collect(Collectors.joining(", "))
-                    )
-                ));
+			// 3. Find the "Todo" quote for this user
+			QuoteDAO quoteToUpdate = allQuotes.stream()
+					.filter(q -> "Todo".equalsIgnoreCase(q.getIsAccepted())
+							&& quoteDTOCustom.getUserSeqNo().equals(q.getUserSeqNo()))
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException(
+							String.format("Todo quote not found for UserSeqNo %d and EnqSeqNo %d. Available: %s",
+									quoteDTOCustom.getUserSeqNo(), quoteDTOCustom.getEnqSeqNo(),
+									allQuotes.stream().map(q -> q.getUserSeqNo() + ":" + q.getIsAccepted())
+											.collect(Collectors.joining(", ")))));
 
-            // 4. Update quotes
-            if ("accept".equalsIgnoreCase(quoteDTOCustom.getIsAccepted())) {
-                // Accept this quote, reject others (only those in Todo state)
-                allQuotes.forEach(quote -> {
-                    if ("Todo".equalsIgnoreCase(quote.getIsAccepted())) {
-                        if (quoteDTOCustom.getUserSeqNo().equals(quote.getUserSeqNo())) {
-                            quote.setIsAccepted("accept");
-                        } else {
-                            quote.setIsAccepted("reject");
-                        }
-                    }
-                });
-            } else {
-                // Just update this Todo quote to reject/other status
-                quoteToUpdate.setIsAccepted(quoteDTOCustom.getIsAccepted());
-            }
+			// 4. Update quotes
+			if ("accept".equalsIgnoreCase(quoteDTOCustom.getIsAccepted())) {
+				// Accept this quote, reject others (only those in Todo state)
+				allQuotes.forEach(quote -> {
+					if ("Todo".equalsIgnoreCase(quote.getIsAccepted())) {
+						if (quoteDTOCustom.getUserSeqNo().equals(quote.getUserSeqNo())) {
+							quote.setIsAccepted("accept");
+						} else {
+							quote.setIsAccepted("reject");
+						}
+					}
+				});
+			} else {
+				// Just update this Todo quote to reject/other status
+				quoteToUpdate.setIsAccepted(quoteDTOCustom.getIsAccepted());
+			}
 
-            // 5. Find the latest accepted quote
-            Optional<QuoteDAO> latestAcceptedQuote = allQuotes.stream()
-                .filter(q -> "accept".equalsIgnoreCase(q.getIsAccepted()) && q.getQuoteCreatedDate() != null)
-                .max(Comparator.comparing(QuoteDAO::getQuoteCreatedDate));
+			// 5. Find the latest accepted quote
+			Optional<QuoteDAO> latestAcceptedQuote = allQuotes.stream()
+					.filter(q -> "accept".equalsIgnoreCase(q.getIsAccepted()) && q.getQuoteCreatedDate() != null)
+					.max(Comparator.comparing(QuoteDAO::getQuoteCreatedDate));
 
-            // 6. Update currUnderwriter based on latest accepted quote
-            latestAcceptedQuote.ifPresent(latestQuote -> {
-                allQuotes.forEach(q -> q.setCurrUnderwriter(latestQuote.getQuoteSeqNo()));
-            });
+			// 6. Update currUnderwriter based on latest accepted quote
+			latestAcceptedQuote.ifPresent(latestQuote -> {
+				allQuotes.forEach(q -> q.setCurrUnderwriter(latestQuote.getQuoteSeqNo()));
+			});
 
-            // 7. Save all updates
-            quoteRepositoryCustom.saveAll(allQuotes);
+			// 7. Save all updates
+			quoteRepositoryCustom.saveAll(allQuotes);
 
-            // 8. Return response
-            return ResponseEntity.ok(QuoteMapperCustom.INSTANCE.quoteDAOToQuoteDTOCustom(quoteToUpdate));
+			// 8. Return response
+			return ResponseEntity.ok(QuoteMapperCustom.INSTANCE.quoteDAOToQuoteDTOCustom(quoteToUpdate));
 
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            log.error("Validation error: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
-        } catch (EntityNotFoundException e) {
-            log.error("Not found error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", "Internal server error"));
-        }
-    }
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			log.error("Validation error: {}", e.getMessage());
+			return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+		} catch (EntityNotFoundException e) {
+			log.error("Not found error: {}", e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", e.getMessage()));
+		} catch (Exception e) {
+			log.error("Unexpected error: {}", e.getMessage(), e);
+			return ResponseEntity.internalServerError()
+					.body(Collections.singletonMap("error", "Internal server error"));
+		}
+	}
 
 }

@@ -1,21 +1,26 @@
 package com.vi.model.dao;
 
+import java.util.Date;
+import java.util.List;
+
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Date;
-
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import jakarta.persistence.*;
 
 
 @Data
@@ -31,6 +36,14 @@ public class LjmEmailTemplateDAO {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ET_SYS_ID")
     private Long etSysId;
+	
+//	@Column(name = "WORK_STEP_ID")
+//  private Long workStepId;
+//	
+//	@ManyToOne(fetch = FetchType.LAZY)
+//  @NotFound(action = NotFoundAction.IGNORE)
+//  @JoinColumn(name="WORK_STEP_ID", referencedColumnName = "WORK_STEP_ID", insertable=false, updatable=false)
+//	private WorkflowDAO workflow;
 
     @Column(name = "ET_TEMP_NAME")
     private String etTempName;
@@ -41,8 +54,7 @@ public class LjmEmailTemplateDAO {
     @Column(name = "ET_ACTIVE_YN")
     private String etActiveYn;
 
-    @Lob
-    @Column(name = "ET_MSG_BODY")
+    @Column(name = "ET_MSG_BODY", length = 2500)
     private String etMsgBody;
 
     @Column(name = "ET_INS_ID")
@@ -56,6 +68,21 @@ public class LjmEmailTemplateDAO {
 
     @Column(name = "ET_MOD_DT")
     private Date etModDt;
+    
+    @Column(name = "ET_SUBJECT")
+    private String etSubject;
+    
+    @Column(name = "ET_FROM")
+    private String etFrom;
+    
+    @Column(name = "ET_TO")
+    private String etTo;
+    
+    @Column(name = "ET_CC")
+    private String etCc;
+    
+    @Column(name = "ET_BCC")
+    private String etBcc;
     
     @Column(name = "DELETED")
     private Boolean deleted=false;
