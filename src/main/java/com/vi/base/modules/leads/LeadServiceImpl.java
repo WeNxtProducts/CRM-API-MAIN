@@ -50,4 +50,9 @@ public class LeadServiceImpl implements LeadService {
 	public List<LeadDTO> filterData(JsonNode search, int page, int size) {
 		return leadPersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<LeadDTO> filterData(JsonNode search) {
+		return leadPersistent.filterData(search);
+	}
 }

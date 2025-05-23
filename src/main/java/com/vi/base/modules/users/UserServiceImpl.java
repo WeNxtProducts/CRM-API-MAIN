@@ -4,9 +4,11 @@
 
 package com.vi.base.modules.users;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.vi.model.dto.UserDTO;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.vi.model.dao.UserDAO;
+import com.vi.model.dto.UserDTO;
 
 public class UserServiceImpl implements UserService {
 
@@ -50,4 +52,11 @@ public class UserServiceImpl implements UserService {
 	public List<UserDTO> filterData(JsonNode search,int page,int size) {
 		return userPersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<UserDTO> filterData(JsonNode search) {
+		return userPersistent.filterData(search);
+	}
+	
+
 }

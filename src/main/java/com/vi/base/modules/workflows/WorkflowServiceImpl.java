@@ -50,4 +50,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public List<WorkflowDTO> filterData(JsonNode search,int page,int size) {
 		return workflowPersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<WorkflowDTO> filterData(JsonNode search) {
+		return workflowPersistent.filterData(search);
+	}
 }

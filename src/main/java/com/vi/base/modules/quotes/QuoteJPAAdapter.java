@@ -87,4 +87,10 @@ public class QuoteJPAAdapter implements QuotePersistent {
     Specification<QuoteDAO> result = new FilterSpecificationsBuilder<QuoteDAO>().with(search).build();
 		return QuoteMapper.INSTANCE.quoteDAOListToQuoteDTOList(quoteRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<QuoteDTO> filterData(JsonNode search) {
+    Specification<QuoteDAO> result = new FilterSpecificationsBuilder<QuoteDAO>().with(search).build();
+		return QuoteMapper.INSTANCE.quoteDAOListToQuoteDTOList(quoteRepository.findAll(result));
+	}
 }

@@ -87,4 +87,10 @@ public class LjmEmailParamJPAAdapter implements LjmEmailParamPersistent {
     Specification<LjmEmailParamDAO> result = new FilterSpecificationsBuilder<LjmEmailParamDAO>().with(search).build();
 		return LjmEmailParamMapper.INSTANCE.ljmEmailParamDAOListToLjmEmailParamDTOList(ljmEmailParamRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<LjmEmailParamDTO> filterData(JsonNode search) {
+    Specification<LjmEmailParamDAO> result = new FilterSpecificationsBuilder<LjmEmailParamDAO>().with(search).build();
+		return LjmEmailParamMapper.INSTANCE.ljmEmailParamDAOListToLjmEmailParamDTOList(ljmEmailParamRepository.findAll(result));
+	}
 }

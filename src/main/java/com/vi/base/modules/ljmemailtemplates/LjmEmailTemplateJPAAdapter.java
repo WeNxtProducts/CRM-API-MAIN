@@ -87,4 +87,10 @@ public class LjmEmailTemplateJPAAdapter implements LjmEmailTemplatePersistent {
     Specification<LjmEmailTemplateDAO> result = new FilterSpecificationsBuilder<LjmEmailTemplateDAO>().with(search).build();
 		return LjmEmailTemplateMapper.INSTANCE.ljmEmailTemplateDAOListToLjmEmailTemplateDTOList(ljmEmailTemplateRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<LjmEmailTemplateDTO> filterData(JsonNode search) {
+    Specification<LjmEmailTemplateDAO> result = new FilterSpecificationsBuilder<LjmEmailTemplateDAO>().with(search).build();
+		return LjmEmailTemplateMapper.INSTANCE.ljmEmailTemplateDAOListToLjmEmailTemplateDTOList(ljmEmailTemplateRepository.findAll(result));
+	}
 }

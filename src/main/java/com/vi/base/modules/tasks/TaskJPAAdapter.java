@@ -94,4 +94,10 @@ public class TaskJPAAdapter implements TaskPersistent {
     Specification<TaskDAO> result = new FilterSpecificationsBuilder<TaskDAO>().with(search).build();
 		return TaskMapper.INSTANCE.taskDAOListToTaskDTOList(taskRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<TaskDTO> filterData(JsonNode search) {
+    Specification<TaskDAO> result = new FilterSpecificationsBuilder<TaskDAO>().with(search).build();
+		return TaskMapper.INSTANCE.taskDAOListToTaskDTOList(taskRepository.findAll(result));
+	}
 }

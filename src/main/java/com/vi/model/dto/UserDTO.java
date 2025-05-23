@@ -30,9 +30,13 @@ public class UserDTO  {
     private String userPhoneNo;
     private String userRole; 
     private String userPassword;
-    private String assignedTo; 
+    private String loginId;
+    private String assignedTo;
+    private String assignedToLoginId;
     private String assignedToName;
     private String assignedToEmail;
+    private String companyId;
+    private String isActive;
     private String createdBy;
     private Date createdDate=Date.from(Instant.now());;
     private String updatedBy;

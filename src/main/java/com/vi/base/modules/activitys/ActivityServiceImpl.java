@@ -59,6 +59,11 @@ public class ActivityServiceImpl implements ActivityService {
     public List<ActivityDTO> filterData(JsonNode search, int page, int size) {
         return activityPersistent.filterData(search, page, size);
     }
+    
+    @Override
+    public List<ActivityDTO> filterData(JsonNode search) {
+        return activityPersistent.filterData(search);
+    }
 
 	@Override
 	public ResponseEntity<Map<String, Object>> getCalendarData(Date startDate, Date endDate, Long userSeqNo) {

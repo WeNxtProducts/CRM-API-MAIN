@@ -94,4 +94,10 @@ public class WorkflowJPAAdapter implements WorkflowPersistent {
     Specification<WorkflowDAO> result = new FilterSpecificationsBuilder<WorkflowDAO>().with(search).build();
 		return WorkflowMapper.INSTANCE.workflowDAOListToWorkflowDTOList(workflowRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<WorkflowDTO> filterData(JsonNode search) {
+    Specification<WorkflowDAO> result = new FilterSpecificationsBuilder<WorkflowDAO>().with(search).build();
+		return WorkflowMapper.INSTANCE.workflowDAOListToWorkflowDTOList(workflowRepository.findAll(result));
+	}
 }

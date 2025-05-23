@@ -1,6 +1,12 @@
 package com.vi.extended.modules.quotes;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,17 +14,21 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vi.base.modules.quotes.QuoteService;
 import com.vi.base.modules.users.UserService;
 import com.vi.model.dao.QuoteDAO;
+import com.vi.model.dto.PaginatedResponse;
 import com.vi.model.dto.QuoteDTO;
 import com.vi.model.dto.QuoteDTOCustom;
-import com.vi.model.dto.UserDTO;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -48,6 +58,79 @@ public class QuoteControllerCustom {
     @PersistenceContext
     private EntityManager em;
     
+//    @PostMapping("/Filter")
+//    public ResponseEntity<?> filter(
+//        @RequestBody JsonNode json,
+//        @RequestParam(value = "page", defaultValue = "0") int page,
+//        @RequestParam(value = "size", defaultValue = "1000") int size,
+//        @RequestParam(value = "dateFilter", required = false) String dateFilter,
+//        @RequestParam(value = "from", required = false) String from,
+//        @RequestParam(value = "to", required = false) String to,
+//        @RequestParam(value = "listingType", required = true) String listingType) {
+//
+//        try {
+//            if (json == null) {
+//                return ResponseEntity.badRequest().body("Request body cannot be null");
+//            }
+//
+//            ObjectNode mutableJson = (ObjectNode) json.deepCopy();
+//            mutableJson.remove("page");
+//            mutableJson.remove("size");
+//            mutableJson.put("deleted", "false");
+//
+//            // Apply custom date filter if present
+//            if ("custom".equalsIgnoreCase(dateFilter) && from != null && to != null) {
+//                mutableJson.put("quoteCreatedDate", from + "__" + to);
+//                log.info("Applying custom date filter: {} to {}", from, to);
+//            }
+//
+//            Set<QuoteDTO> finalResults = new LinkedHashSet<>(); // <--- FIX: Set<QuoteDTO>
+//
+//            if ("underwriter".equalsIgnoreCase(listingType)) {
+//                // Underwriter listing: isAccepted = "Todo" or "accept"
+//                ObjectNode filterJson = mutableJson.deepCopy();
+//                
+//                filterJson.put("isAccepted", "Todo");
+//                log.info("Filtering for underwriter with isAccepted: Todo");
+//                List<QuoteDTO> partialResultsTodo = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
+//                finalResults.addAll(partialResultsTodo);
+//
+//                filterJson.put("isAccepted", "accept");
+//                log.info("Filtering for underwriter with isAccepted: accept");
+//                List<QuoteDTO> partialResultsAccept = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
+//                finalResults.addAll(partialResultsAccept);
+//
+//            } else if ("quoteHistory".equalsIgnoreCase(listingType)) {
+//                // Only filter by isAccepted = "accept"
+//                ObjectNode filterJson = mutableJson.deepCopy();
+//                filterJson.put("isAccepted", "accept");
+//
+//                log.info("Filtering for quote history with isAccepted: accept");
+//
+//                List<QuoteDTO> partialResults = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
+//                finalResults.addAll(partialResults);
+//
+//            } else {
+//                return ResponseEntity.badRequest().body("Invalid listing type");
+//            }
+//
+//
+//            // Convert Set to List and sort by 'quoteCreatedDate' to show latest first
+//            List<QuoteDTO> resultList = new ArrayList<>(finalResults);
+//
+//            resultList.sort(Comparator.comparing(QuoteDTO::getQuoteCreatedDate).reversed());
+//
+//            log.info("Filtered {} results", resultList.size());
+//
+//            return ResponseEntity.ok(resultList);
+//
+//        } catch (Exception ex) {
+//            log.error("Error filtering quotes", ex);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(Collections.singletonMap("error", ex.getMessage()));
+//        }
+//    }
+
     @PostMapping("/Filter")
     public ResponseEntity<?> filter(
         @RequestBody JsonNode json,
@@ -68,51 +151,55 @@ public class QuoteControllerCustom {
             mutableJson.remove("size");
             mutableJson.put("deleted", "false");
 
-            // Apply custom date filter if present
+            // Apply custom date filter
             if ("custom".equalsIgnoreCase(dateFilter) && from != null && to != null) {
                 mutableJson.put("quoteCreatedDate", from + "__" + to);
                 log.info("Applying custom date filter: {} to {}", from, to);
             }
 
-            Set<QuoteDTO> finalResults = new LinkedHashSet<>(); // <--- FIX: Set<QuoteDTO>
+            Set<QuoteDTO> finalResults = new LinkedHashSet<>();
 
             if ("underwriter".equalsIgnoreCase(listingType)) {
-                // Underwriter listing: isAccepted = "Todo" or "accept"
-                ObjectNode filterJson = mutableJson.deepCopy();
-                
-                filterJson.put("isAccepted", "Todo");
-                log.info("Filtering for underwriter with isAccepted: Todo");
-                List<QuoteDTO> partialResultsTodo = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
-                finalResults.addAll(partialResultsTodo);
+                ObjectNode filterJsonTodo = mutableJson.deepCopy();
+                filterJsonTodo.put("isAccepted", "Todo");
+                List<QuoteDTO> resultsTodo = (List<QuoteDTO>) quoteService.filterData(filterJsonTodo);
+                finalResults.addAll(resultsTodo);
 
-                filterJson.put("isAccepted", "accept");
-                log.info("Filtering for underwriter with isAccepted: accept");
-                List<QuoteDTO> partialResultsAccept = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
-                finalResults.addAll(partialResultsAccept);
+                ObjectNode filterJsonAccept = mutableJson.deepCopy();
+                filterJsonAccept.put("isAccepted", "accept");
+                List<QuoteDTO> resultsAccept = (List<QuoteDTO>) quoteService.filterData(filterJsonAccept);
+                finalResults.addAll(resultsAccept);
 
             } else if ("quoteHistory".equalsIgnoreCase(listingType)) {
-                // Only filter by isAccepted = "accept"
                 ObjectNode filterJson = mutableJson.deepCopy();
                 filterJson.put("isAccepted", "accept");
-
-                log.info("Filtering for quote history with isAccepted: accept");
-
-                List<QuoteDTO> partialResults = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
-                finalResults.addAll(partialResults);
-
+                List<QuoteDTO> results = (List<QuoteDTO>) quoteService.filterData(filterJson);
+                finalResults.addAll(results);
             } else {
                 return ResponseEntity.badRequest().body("Invalid listing type");
             }
 
-
-            // Convert Set to List and sort by 'quoteCreatedDate' to show latest first
+            // Convert Set to List, sort by quoteCreatedDate descending
             List<QuoteDTO> resultList = new ArrayList<>(finalResults);
-
             resultList.sort(Comparator.comparing(QuoteDTO::getQuoteCreatedDate).reversed());
 
-            log.info("Filtered {} results", resultList.size());
+            // Get total count before pagination
+            int totalCount = resultList.size();
 
-            return ResponseEntity.ok(resultList);
+            // Paginate manually
+            int start = page * size;
+            int end = Math.min(start + size, totalCount);
+
+            List<QuoteDTO> paginatedResult;
+            if (start <= end) {
+                paginatedResult = resultList.subList(start, end);
+            } else {
+                paginatedResult = Collections.emptyList(); // avoid IndexOutOfBounds
+            }
+
+            // Create PaginatedResponse
+            PaginatedResponse<QuoteDTO> response = new PaginatedResponse<>(paginatedResult, totalCount);
+            return ResponseEntity.ok(response);
 
         } catch (Exception ex) {
             log.error("Error filtering quotes", ex);

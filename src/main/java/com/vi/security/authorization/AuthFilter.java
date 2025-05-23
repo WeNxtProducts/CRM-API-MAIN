@@ -32,7 +32,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 //import org.springframework.web.servlet.HandlerExceptionResolver;
 
-
 @Configuration
 @EnableAutoConfiguration
 @Component
@@ -49,21 +48,26 @@ public class AuthFilter extends OncePerRequestFilter implements EnvironmentAware
         System.out.println(env.getProperty("server.publicPath"));
         return Stream.of(env.getProperty("server.publicPath",String[].class)).anyMatch(path::equals);
     }
+    
     public String decodeToken(String authorization) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         SecureKeyGen secureKeyGen = new SecureKeyGen();
         String token2 = secureKeyGen.decrypt(authorization);
         System.out.println(token2);
         return token2;
     }
+    
     private String sendInvalidToken(Long requestId) {
         return responseWriter.getResponse(403,"{\"message\":\"Missing or Invalid Token\"}",requestId);
     }
+    
     private String sendExpiredToken(Long requestId) {
         return responseWriter.getResponse(400,"{\"message\":\"Token Expired\"}",requestId);
     }
+    
     private String sendInternalError(Long requestId) {
         return responseWriter.getResponse(400,"{\"message\":\"Internal Error\"}",requestId);
     }
+    
     private Boolean isTokenExpired(String token) throws JSONException {
         JSONObject decodedToken = new JSONObject(token);
         Date t2 = new Date(decodedToken.getLong("expiryDate"));
@@ -99,6 +103,7 @@ public class AuthFilter extends OncePerRequestFilter implements EnvironmentAware
             if (response.getContentType() != null) {
                 String content = capturingResponseWrapper.getCaptureAsString();
                 System.out.println(content);
+                
                 response.getWriter().write(responseWriter.getResponse(response.getStatus(),content,1L));
             }
         } catch (IOException e) {

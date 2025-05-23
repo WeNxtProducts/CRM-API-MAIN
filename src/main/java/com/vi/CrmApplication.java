@@ -13,5 +13,4 @@ public class CrmApplication {
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(CrmApplication.class, args);
 	}
-
 }

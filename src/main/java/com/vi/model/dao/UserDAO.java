@@ -60,8 +60,72 @@ public class UserDAO {
     @Column(name = "USER_ROLE")
     private String userRole; 
     
+    @Column(name = "LOGIN_ID")
+    private String loginId;
+    
+//    @Column(name = "MOBILE_CODE")
+//    private String mobileCode;
+//    
+//    @Column(name = "WHATSAPP_CODE")
+//    private String whatsappCode;
+//    
+//    @Column(name = "WHATSAPP_NO")
+//    private String whatsappNo;
+//    
+//    @Column(name = "COUNTRY_CODE")
+//    private String countryCode;
+//    
+//    @Column(name = "COUNTRY_NAME")
+//    private String countryName;
+//    
+//    @Column(name = "STATE_CODE")
+//    private String stateCode;
+//    
+//    @Column(name = "STATE_NAME")
+//    private String stateName;
+//    
+//    @Column(name = "CITY_CODE")
+//    private String cityCode;
+//    
+//    @Column(name = "CITY_NAME")
+//    private String cityName;
+//    
+//    @Column(name = "ADDRESS_1")
+//    private String address1;
+//    
+//    @Column(name = "ADDRESS_2")
+//    private String address2;
+//    
+//    @Column(name = "ADDRESS_3")
+//    private String address3;
+//    
+//    @Column(name = "COMPANY_NAME")
+//    private String companyName;
+//    
+//    @Column(name = "AGENCY_CODE")
+//    private String agencyCode;
+//    
+////    @Column(name = "ATTACHED_BRANCHES")
+////    private List<String>  attachedBranches;
+////    
+////    @Column(name = "ATTACHED_COMPANIES")
+////    private List<String>  attachedCompanies;
+////    
+////    @Column(name = "ATTACHED_REGIONS")
+////    private List<String>  attachedRegions;
+    
+    
+    @Column(name = "COMPANY_ID")
+    private String companyId;
+    
+    @Column(name = "IS_ACTIVE")
+    private String isActive;
+    
     @Column(name = "ASSIGNED_TO")
     private String assignedTo;
+    
+    @Column(name = "ASSIGNED_TO_LOGIN_ID")
+    private String assignedToLoginId;
     
     @Column(name = "ASSIGNED_TO_NAME")
     private String assignedToName;

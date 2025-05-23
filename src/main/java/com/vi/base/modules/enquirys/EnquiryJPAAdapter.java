@@ -95,4 +95,10 @@ public class EnquiryJPAAdapter implements EnquiryPersistent {
     Specification<EnquiryDAO> result = new FilterSpecificationsBuilder<EnquiryDAO>().with(search).build();
 		return EnquiryMapper.INSTANCE.enquiryDAOListToEnquiryDTOList(enquiryRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<EnquiryDTO> filterData(JsonNode search) {
+    Specification<EnquiryDAO> result = new FilterSpecificationsBuilder<EnquiryDAO>().with(search).build();
+		return EnquiryMapper.INSTANCE.enquiryDAOListToEnquiryDTOList(enquiryRepository.findAll(result));
+	}
 }

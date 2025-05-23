@@ -93,4 +93,11 @@ public class ActivityLogJPAAdapter implements ActivityLogPersistent {
     Specification<ActivityLogDAO> result = new FilterSpecificationsBuilder<ActivityLogDAO>().with(search).build();
 		return ActivityLogMapper.INSTANCE.activityLogDAOListToActivityLogDTOList(activityLogRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<ActivityLogDTO> filterData(JsonNode search) {
+
+    Specification<ActivityLogDAO> result = new FilterSpecificationsBuilder<ActivityLogDAO>().with(search).build();
+		return ActivityLogMapper.INSTANCE.activityLogDAOListToActivityLogDTOList(activityLogRepository.findAll(result));
+	}
 }

@@ -91,7 +91,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
     private static final String SMTP_PASSWORD = "beja kxnm kdsa zkyx";
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final int SMTP_PORT = 587;
-    private String FROM_NAME = "No Reply";
+    private String FROM_NAME = "WENXT TECHNOLOGIES";
 
     @Override
     public String sendMail(EmailRequestModel inputObject, HttpServletRequest request) throws Exception {
@@ -135,7 +135,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
             Map<String, Object> templateParams = prepareTemplateParameters(lead, enquiry, recipients);
 
             // 7. Handle underwriter-specific cases
-            if (inputObject.getMasterTriggerId() >= 5 && inputObject.getMasterTriggerId() <= 12) {
+            if (inputObject.getMasterTriggerId() >= 5 && inputObject.getMasterTriggerId() <= 14) {
                 handleUnderwriterEmails(inputObject, emailTemplate, lead, templateParams, attachments, response);
             } else {
                 // 8. Send regular role-based email
@@ -166,7 +166,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
         }  
         
         // For quote-related triggers, get underwriters
-        if (masterTriggerId >= 5 && masterTriggerId <= 12) {
+        if (masterTriggerId >= 5 && masterTriggerId <= 14) {
             List<QuoteDAO> quotes = quoteRepo.findByLeadSeqNo(lead.getLeadSeqNo());
             recipients.setUnderwriterIds(quotes.stream()
                 .filter(q -> "Todo".equalsIgnoreCase(q.getIsAccepted()))
@@ -228,8 +228,8 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
                                         Map<String, Object> baseParams, 
                                         Map<String, MultipartFile> attachments,
                                         JSONObject response) throws Exception {
-        // Get all unique underwriters
-        List<QuoteDAO> quotes = quoteRepo.findByLeadSeqNo(lead.getLeadSeqNo());
+// 		  Get all unique underwriters
+          List<QuoteDAO> quotes = quoteRepo.findByLeadSeqNo(lead.getLeadSeqNo());
 //        List<Long> underwriterIds = quotes.stream()
 //            .filter(q -> "Todo".equalsIgnoreCase(q.getIsAccepted()))
 //            .map(QuoteDAO::getUserSeqNo)
@@ -246,7 +246,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
             }
         }
         
-        List<Long> acceptTriggerIds = Arrays.asList(7L, 8L, 9L, 10L, 11L, 12L);
+        List<Long> acceptTriggerIds = Arrays.asList(7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L);
         for (QuoteDAO quote : quotes) {
             if (acceptTriggerIds.contains(inputObject.getMasterTriggerId()) && "accept".equalsIgnoreCase(quote.getIsAccepted()) && "Todo".equalsIgnoreCase(quote.getIsDone())) {
                 Long userSeqNo = quote.getUserSeqNo();
@@ -296,13 +296,13 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
         
         // Determine primary recipient based on template configuration
         if (template.getEtTo().equals("sId")) {
-//        	System.out.println(recipients.getSalesId() + "*");
+        // System.out.println(recipients.getSalesId() + "*");
 
             toEmail = userRepo.findById(recipients.getSalesId())
                 .map(UserDAO::getUserEmail)
                 .orElse(null);
         } else if (template.getEtTo().equals("mId")) {
-//        	System.out.println(recipients.getManagerId() + "*");
+        //  System.out.println(recipients.getManagerId() + "*");
             toEmail = userRepo.findById(recipients.getManagerId())
                 .map(UserDAO::getUserEmail)
                 .orElse(null);
@@ -320,13 +320,12 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
         Session session = createMailSession();
         MimeMessage message = new MimeMessage(session);
 
-        // Set basic headers
-//        
-//        LeadDAO lead = leadRepo.findById(inputObject.getLeadSeqNo())
-
+     // Determine sender name based on etFrom
+        String fromName = determineSenderName(template.getEtFrom(), params);
         
-        message.setFrom(new InternetAddress(SMTP_USERNAME, FROM_NAME));
+        message.setFrom(new InternetAddress(SMTP_USERNAME, fromName));
         message.setSubject(replacePlaceholders(template.getEtSubject(), params));
+
 
         // Process recipients
 //        System.out.println(specificToEmail);
@@ -373,6 +372,35 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
         Transport.send(message);
 
         logEmail(template, toEmails, ccEmails, formattedBody, attachments.keySet());
+    }
+    
+    private String determineSenderName(String etFrom, Map<String, Object> params) {
+        if (etFrom == null || etFrom.isEmpty()) {
+            return FROM_NAME; // Default fallback
+        }
+        
+        switch (etFrom) {
+            case "sId":
+                if (params.get("SalesName") != null) {
+                    return params.get("SalesName").toString();
+                }
+                break;
+            case "mId":
+                if (params.get("ManagerName") != null) {
+                    return params.get("ManagerName").toString();
+                }
+                break;
+            case "uId":
+                if (params.get("UnderwriterName") != null) {
+                    return params.get("UnderwriterName").toString();
+                }
+                break;
+            default:
+                // If etFrom contains a direct name, use that
+                return etFrom;
+        }
+        
+        return FROM_NAME; // Default fallback
     }
 
     private Session createMailSession() {
@@ -447,7 +475,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
                         String body, Set<String> attachments) {
         EmailLogsDTO log = new EmailLogsDTO();
         log.setTo(String.join(",", to));
-//        log.setCc(String.join(",", cc));
+        // log.setCc(String.join(",", cc));
         log.setTemplateName(template.getEtTempName());
         log.setTemplateBody(Jsoup.parse(body).text());
         log.setGenDate(LocalDateTime.now());

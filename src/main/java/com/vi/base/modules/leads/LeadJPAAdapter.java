@@ -87,4 +87,10 @@ public class LeadJPAAdapter implements LeadPersistent {
     Specification<LeadDAO> result = new FilterSpecificationsBuilder<LeadDAO>().with(search).build();
 		return LeadMapper.INSTANCE.leadDAOListToLeadDTOList(leadRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<LeadDTO> filterData(JsonNode search) {
+    Specification<LeadDAO> result = new FilterSpecificationsBuilder<LeadDAO>().with(search).build();
+		return LeadMapper.INSTANCE.leadDAOListToLeadDTOList(leadRepository.findAll(result));
+	}
 }

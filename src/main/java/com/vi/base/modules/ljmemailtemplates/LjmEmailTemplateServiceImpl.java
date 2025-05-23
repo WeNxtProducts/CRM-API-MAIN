@@ -50,4 +50,9 @@ public class LjmEmailTemplateServiceImpl implements LjmEmailTemplateService {
 	public List<LjmEmailTemplateDTO> filterData(JsonNode search, int page, int size) {
 		return ljmEmailTemplatePersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<LjmEmailTemplateDTO> filterData(JsonNode search) {
+		return ljmEmailTemplatePersistent.filterData(search);
+	}
 }

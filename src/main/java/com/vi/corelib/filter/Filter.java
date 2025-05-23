@@ -156,7 +156,7 @@ public abstract class Filter {
 
 			    System.out.println("---- Inside BETWEEN operation ----");
 
-			 // Parse the String dates into LocalDate
+			    // Parse the String dates into LocalDate
 			    String[] dateRange = criteria.getValue().toString().split("__");
 
 			    LocalDate fromDate = LocalDate.parse(dateRange[0]);

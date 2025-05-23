@@ -50,4 +50,9 @@ public class EnquiryServiceImpl implements EnquiryService {
 	public List<EnquiryDTO> filterData(JsonNode search, int page, int size) {
 		return enquiryPersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<EnquiryDTO> filterData(JsonNode search) {
+		return enquiryPersistent.filterData(search);
+	}
 }

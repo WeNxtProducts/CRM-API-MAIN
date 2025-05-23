@@ -108,6 +108,12 @@ public class ActivityJPAAdapter implements ActivityPersistent {
 	}
 	
 	@Override
+	public List<ActivityDTO> filterData(JsonNode search) {
+		Specification<ActivityDAO> result = new FilterSpecificationsBuilder<ActivityDAO>().with(search).build();
+		return ActivityMapper.INSTANCE.activityDAOListToActivityDTOList(activityRepository.findAll(result));
+	}
+	
+	@Override
 	public ResponseEntity<Map<String, Object>> getCalendarData(Date startDate, Date endDate, Long userSeqNo) {
 	    try {
 	        // Fetch only activities for the specific user

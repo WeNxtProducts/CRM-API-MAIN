@@ -134,7 +134,9 @@ public class QuoteController {
 	    if (quoteDTO.getEnqSeqNo() != null) {
 
 	        // 1. Update Lead if status is accEnq or rejEnq
-	        if ("accEnq".equals(quoteDTO.getQuoteStatus()) || "rejEnq".equals(quoteDTO.getQuoteStatus())) {
+	    	// if ("accEnq".equals(quoteDTO.getQuoteStatus()) || "rejEnq".equals(quoteDTO.getQuoteStatus())) {
+		    if ("accEnq".equals(quoteDTO.getQuoteStatus())) {
+
 
 	            LeadDAO lead = leadRepository.findById(quoteDTO.getLeadSeqNo())
 	                .orElseThrow(() -> new ResourceNotFoundException(

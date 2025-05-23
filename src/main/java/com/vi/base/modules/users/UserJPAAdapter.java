@@ -94,4 +94,10 @@ public class UserJPAAdapter implements UserPersistent {
     Specification<UserDAO> result = new FilterSpecificationsBuilder<UserDAO>().with(search).build();
 		return UserMapper.INSTANCE.userDAOListToUserDTOList(userRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<UserDTO> filterData(JsonNode search) {
+    Specification<UserDAO> result = new FilterSpecificationsBuilder<UserDAO>().with(search).build();
+		return UserMapper.INSTANCE.userDAOListToUserDTOList(userRepository.findAll(result));
+	}
 }

@@ -50,4 +50,9 @@ public class LjmEmailParamServiceImpl implements LjmEmailParamService {
 	public List<LjmEmailParamDTO> filterData(JsonNode search, int page, int size) {
 		return ljmEmailParamPersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<LjmEmailParamDTO> filterData(JsonNode search) {
+		return ljmEmailParamPersistent.filterData(search);
+	}
 }
