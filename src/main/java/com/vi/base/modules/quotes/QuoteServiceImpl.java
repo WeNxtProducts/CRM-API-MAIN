@@ -50,4 +50,9 @@ public class QuoteServiceImpl implements QuoteService {
 	public List<QuoteDTO> filterData(JsonNode search, int page, int size) {
 		return quotePersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<QuoteDTO> filterData(JsonNode search) {
+		return quotePersistent.filterData(search);
+	}
 }

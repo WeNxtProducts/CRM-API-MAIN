@@ -41,16 +41,16 @@ public class QuoteJPAAdapter implements QuotePersistent {
 		return null;
 	}
 
-  @SneakyThrows
 	@Override
+	@SneakyThrows
 	public QuoteDTO create(QuoteDTO quoteDTO) {
-		var quoteDAO = QuoteMapper.INSTANCE.quoteDTOToQuoteDAO(quoteDTO);
-		var newQuote = quoteRepository.save(quoteDAO);
-		var newData = QuoteMapper.INSTANCE.quoteDAOToQuoteDTO(newQuote);
-		
-		
-		return newData;
+	    var quoteDAO = QuoteMapper.INSTANCE.quoteDTOToQuoteDAO(quoteDTO);
+	    var newQuote = quoteRepository.save(quoteDAO);
+	    var newData = QuoteMapper.INSTANCE.quoteDAOToQuoteDTO(newQuote);
+	    
+	    return newData;
 	}
+
 
 	@Override
  		public QuoteDTO update(QuoteDTO quoteDTO) {
@@ -86,5 +86,11 @@ public class QuoteJPAAdapter implements QuotePersistent {
 		Pageable pageable = PageRequest.of(page, size, Sort.by("quoteSeqNo").descending());
     Specification<QuoteDAO> result = new FilterSpecificationsBuilder<QuoteDAO>().with(search).build();
 		return QuoteMapper.INSTANCE.quoteDAOListToQuoteDTOList(quoteRepository.findAll(result, pageable).getContent());
+	}
+	
+	@Override
+	public List<QuoteDTO> filterData(JsonNode search) {
+    Specification<QuoteDAO> result = new FilterSpecificationsBuilder<QuoteDAO>().with(search).build();
+		return QuoteMapper.INSTANCE.quoteDAOListToQuoteDTOList(quoteRepository.findAll(result));
 	}
 }

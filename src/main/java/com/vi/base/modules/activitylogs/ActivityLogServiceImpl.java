@@ -50,4 +50,9 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 	public List<ActivityLogDTO> filterData(JsonNode search, int page, int size) {
 		return activityLogPersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<ActivityLogDTO> filterData(JsonNode search) {
+		return activityLogPersistent.filterData(search);
+	}
 }

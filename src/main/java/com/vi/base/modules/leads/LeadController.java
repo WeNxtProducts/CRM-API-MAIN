@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vi.base.modules.activitylogs.ActivityLogService;
 import com.vi.model.dto.ActivityLogDTO;
 import com.vi.model.dto.LeadDTO;
+import com.vi.model.dto.PaginatedResponse;
 
 //import com.vi.corelib.LeadInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -63,17 +64,11 @@ public class LeadController {
 	}
 
 	@PostMapping("/create")
-	public ResponseEntity<LeadDTO> create( @RequestBody LeadDTO leadDTO) {
+	public ResponseEntity<LeadDTO> create( @RequestBody LeadDTO leadDTO ) {
 		
 		var leadLeadDTO = leadService.create(leadDTO); 
-		
-//		ActivityLogDTO activityLogDTO = new ActivityLogDTO(); 	
-//		activityLogDTO.setActivityLogDate(new Date(System.currentTimeMillis()));
-//		activityLogDTO.setActivityLogType("LEAD_CREATED");
-//		activityLogDTO.setActivityLogDescription( "Lead created: " + leadLeadDTO.getLeadName());
-//		var activity = activityLogService.create(activityLogDTO);
-		
-		ActivityLogUtil.createActivityLog("LEAD_CREATED","Lead created: " + leadLeadDTO.getLeadName(),activityLogService);
+			
+		ActivityLogUtil.createActivityLog(leadLeadDTO.getUserSeqNo(),"LEAD_CREATED","Lead created: " + leadLeadDTO.getLeadName(),activityLogService);
 		
 		return ResponseEntity.ok().body(leadLeadDTO);
 	}
@@ -93,11 +88,9 @@ public class LeadController {
 		return ResponseEntity.ok().body(leadService.filterData(search));
 	}
 
-	
-
 
 	@GetMapping("/filter2")
-	public ResponseEntity<List<LeadDTO>> filterData2(
+	public ResponseEntity<PaginatedResponse<LeadDTO>> filterData2(
 			@RequestParam HashMap<String, Object> json,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 	        @RequestParam(value = "size", defaultValue = "1000") int size) {
@@ -106,8 +99,15 @@ public class LeadController {
 		JsonNode jsonRequest = new ObjectMapper().convertValue(json, JsonNode.class);
 		
 		  System.out.println("Request JSON: " + jsonRequest);
-		  System.out.println("Page: " + page + ", Size: " + size);		
-		  return ResponseEntity.ok().body(leadService.filterData(jsonRequest, page, size));
+		  System.out.println("Page: " + page + ", Size: " + size);
+		  List<LeadDTO> paginatedData = leadService.filterData(jsonRequest, page, size);
+		  int totalCount = leadService.filterData(jsonRequest).size();
+		  
+		  System.out.println("-------------" + totalCount);
+
+//		  List<LeadDTO> response = new PaginatedResponse<>(paginatedData, totalCount);
+		  PaginatedResponse<LeadDTO> response = new PaginatedResponse<>(paginatedData, totalCount);
+		  return ResponseEntity.ok(response);
 	}
 
 	@DeleteMapping("/{id}")
@@ -116,8 +116,9 @@ public class LeadController {
 	}
 	
 	public class ActivityLogUtil {
-	    public static void createActivityLog(String leadType,String leadName, ActivityLogService activityLogService) {
+	    public static void createActivityLog(Long userSeqNo, String leadType,String leadName, ActivityLogService activityLogService) {
 	        ActivityLogDTO activityLogDTO = new ActivityLogDTO();
+	        activityLogDTO.setUserSeqNo(userSeqNo);
 	        activityLogDTO.setActivityLogDate(new Date(System.currentTimeMillis()));
 	        activityLogDTO.setActivityLogType(leadType);
 	        activityLogDTO.setActivityLogDescription(leadName);

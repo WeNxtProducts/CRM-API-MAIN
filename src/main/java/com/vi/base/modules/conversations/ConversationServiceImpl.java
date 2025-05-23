@@ -50,4 +50,9 @@ public class ConversationServiceImpl implements ConversationService {
 	public List<ConversationDTO> filterData(JsonNode search, int page, int size) {
 		return conversationPersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<ConversationDTO> filterData(JsonNode search) {
+		return conversationPersistent.filterData(search);
+	}
 }

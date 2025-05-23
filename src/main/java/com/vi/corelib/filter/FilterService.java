@@ -8,5 +8,8 @@ import com.vi.corelib.base.BaseService;
 public interface FilterService<T> extends BaseService<T> {
   List<T> filterData(String search);
   List<T> filterData(JsonNode search, int page, int size);
+  List<T> filterData(JsonNode search);
+
+  
 
 }

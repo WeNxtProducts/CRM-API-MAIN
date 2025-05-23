@@ -91,4 +91,10 @@ public class ConversationJPAAdapter implements ConversationPersistent {
 		Specification<ConversationDAO> result = new FilterSpecificationsBuilder<ConversationDAO>().with(search).build();
 		return ConversationMapper.INSTANCE.conversationDAOListToConversationDTOList(conversationRepository.findAll(result, pageable).getContent());
 	}
+	
+	@Override
+	public List<ConversationDTO> filterData(JsonNode search) {
+		Specification<ConversationDAO> result = new FilterSpecificationsBuilder<ConversationDAO>().with(search).build();
+		return ConversationMapper.INSTANCE.conversationDAOListToConversationDTOList(conversationRepository.findAll(result));
+	}
 }

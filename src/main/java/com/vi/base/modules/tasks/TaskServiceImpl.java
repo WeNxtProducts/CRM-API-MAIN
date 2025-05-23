@@ -50,4 +50,9 @@ public class TaskServiceImpl implements TaskService {
 	public List<TaskDTO> filterData(JsonNode search,int page,int size) {
 		return leadPersistent.filterData(search, page, size);
 	}
+	
+	@Override
+	public List<TaskDTO> filterData(JsonNode search) {
+		return leadPersistent.filterData(search);
+	}
 }

@@ -4,27 +4,15 @@
 
 package com.vi.model.dto;
 
-import com.ibm.icu.math.BigDecimal;
-import com.vi.model.BaseDto;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import lombok.AllArgsConstructor;
-import lombok.experimental.SuperBuilder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 import java.util.Date;
 
-import org.hibernate.annotations.NotFound;
+import com.vi.model.dao.QuoteDAO;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder
@@ -80,6 +68,9 @@ public class EnquiryDTO  {
     private Boolean deleted=false;
     private Date deletedAt;
     private String deletedBy;
+    private Long quoteSeqNo;
+    private QuoteDAO quoteDAO;
+
 
 
 }

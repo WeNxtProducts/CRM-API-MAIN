@@ -1,19 +1,23 @@
 package com.vi.corelib.filter;
 
-import com.vi.corelib.UserInfo;
-import com.vi.corelib.utils.DateUtils;
-import reactor.util.annotation.Nullable;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.vi.corelib.UserInfo;
+import com.vi.corelib.utils.DateUtils;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import reactor.util.annotation.Nullable;
 
 public abstract class Filter {
 	public static String getDefault(String controller, @Nullable UserInfo userInfo, @Nullable HashMap<String, String> json) {
@@ -25,7 +29,7 @@ public abstract class Filter {
 	}
 
 	public static Matcher getMatcher(String search) {
-		Pattern pattern = Pattern.compile("(\\w+?)(:|<|>|like|in)(\\w+?),");
+		Pattern pattern = Pattern.compile("(\\w+?)(:|<|>|like|in)([^,]+),");
 		Matcher matcher = pattern.matcher(search + ",");
 		return matcher;
 	}
@@ -82,6 +86,7 @@ public abstract class Filter {
 	}
 
 	public static Predicate getFilter(Root root, CriteriaQuery query, CriteriaBuilder builder, FilterCriteria criteria) {
+		System.out.println("---------------------------Leadcreation"+ criteria);
 		if (criteria.getOperation().equalsIgnoreCase(">=")) {
 			return builder.greaterThanOrEqualTo(
 					root.<String>get(criteria.getKey()), criteria.getValue().toString());
@@ -146,12 +151,36 @@ public abstract class Filter {
 				return builder.equal(root.get(criteria.getKey()), criteria.getValue());
 			}
 		} else if (criteria.getOperation().equalsIgnoreCase("__") ||
-				criteria.getOperation().equalsIgnoreCase("RANGE") ||
-				criteria.getOperation().equalsIgnoreCase("BETWEEN")) {
-			return builder.and(
-					builder.greaterThanOrEqualTo(root.<String>get(criteria.getKey()), criteria.getValue().toString().substring(1, criteria.getValue().toString().indexOf("__") - 1)
-					), builder.lessThanOrEqualTo(root.<String>get(criteria.getKey()), criteria.getValue().toString().substring(criteria.getValue().toString().indexOf("__" + 1))));
-		}
-		return null;
+			    criteria.getOperation().equalsIgnoreCase("RANGE") ||
+			    criteria.getOperation().equalsIgnoreCase("BETWEEN")) {
+
+			    System.out.println("---- Inside BETWEEN operation ----");
+
+			    // Parse the String dates into LocalDate
+			    String[] dateRange = criteria.getValue().toString().split("__");
+
+			    LocalDate fromDate = LocalDate.parse(dateRange[0]);
+			    LocalDate toDate = LocalDate.parse(dateRange[1]);
+
+			    // Convert to LocalDateTime to handle time parts
+			    LocalDateTime fromDateTime = fromDate.atStartOfDay(); // 2025-03-29 00:00:00
+			    LocalDateTime toDateTime = toDate.plusDays(1).atStartOfDay().minusNanos(1); // 2025-04-28 23:59:59.999999999
+
+			    // Convert LocalDateTime to java.util.Date
+			    Date fromDateConverted = Date.from(fromDateTime.atZone(ZoneId.systemDefault()).toInstant());
+			    Date toDateConverted = Date.from(toDateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+//			    System.out.println("############################### From: " + fromDateConverted);
+//			    System.out.println("############################### To: " + toDateConverted);
+
+			    return builder.and(
+			        builder.greaterThanOrEqualTo(root.get(criteria.getKey()), fromDateConverted),
+			        builder.lessThanOrEqualTo(root.get(criteria.getKey()), toDateConverted)
+			    );
+
+			}
+			return null;
+
+
 	}
 }

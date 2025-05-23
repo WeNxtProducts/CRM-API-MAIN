@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "QUERY_MASTER")
+@Table(name = "LJM_QUERY_MASTER")
 public class QUERY_MASTER {
     
     @Id

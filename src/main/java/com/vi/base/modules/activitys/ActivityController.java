@@ -12,12 +12,16 @@ import com.vi.corelib.filter.Filter;
 //import com.vi.corelib.ActivityInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/Activity")
@@ -40,6 +44,16 @@ public class ActivityController {
 		  System.out.println("Page: " + page + ", Size: " + size);	
 		return ResponseEntity.ok().body(activityService.filterData(jsonRequest, page, size));
 	}
+	
+	@GetMapping("/calendar")
+	public ResponseEntity<Map<String, Object>> getCalendarData(
+	        @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+	        @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+	        @RequestParam(value = "userSeqNo") Long userSeqNo) {
+
+	    return activityService.getCalendarData(startDate, endDate, userSeqNo);
+	}
+
 
 	@GetMapping("/{id}")
 	public ResponseEntity<ActivityDTO> getOne(@PathVariable Long id) {

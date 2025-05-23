@@ -1,16 +1,19 @@
 package com.vi.extended.modules.quotes;
 
-import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,9 +26,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vi.base.modules.quotes.QuoteService;
 import com.vi.base.modules.users.UserService;
 import com.vi.model.dao.QuoteDAO;
+import com.vi.model.dto.PaginatedResponse;
+import com.vi.model.dto.QuoteDTO;
 import com.vi.model.dto.QuoteDTOCustom;
-import com.vi.model.dto.SummaryDTO;
-import com.vi.model.dto.UserDTO;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,118 +44,244 @@ public class QuoteControllerCustom {
     private Environment env;
 
     @Autowired
-    private QuoteServiceCustom quoteServiceCustom;  
+    private QuoteServiceCustom quoteServiceCustom;
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private QuoteService quoteService;
-    
+
     @Autowired
     private QuoteRepositoryCustom quoteRepositoryCustom;
 
     @PersistenceContext
-    private EntityManager em; 
-   
+    private EntityManager em;
+    
+//    @PostMapping("/Filter")
+//    public ResponseEntity<?> filter(
+//        @RequestBody JsonNode json,
+//        @RequestParam(value = "page", defaultValue = "0") int page,
+//        @RequestParam(value = "size", defaultValue = "1000") int size,
+//        @RequestParam(value = "dateFilter", required = false) String dateFilter,
+//        @RequestParam(value = "from", required = false) String from,
+//        @RequestParam(value = "to", required = false) String to,
+//        @RequestParam(value = "listingType", required = true) String listingType) {
+//
+//        try {
+//            if (json == null) {
+//                return ResponseEntity.badRequest().body("Request body cannot be null");
+//            }
+//
+//            ObjectNode mutableJson = (ObjectNode) json.deepCopy();
+//            mutableJson.remove("page");
+//            mutableJson.remove("size");
+//            mutableJson.put("deleted", "false");
+//
+//            // Apply custom date filter if present
+//            if ("custom".equalsIgnoreCase(dateFilter) && from != null && to != null) {
+//                mutableJson.put("quoteCreatedDate", from + "__" + to);
+//                log.info("Applying custom date filter: {} to {}", from, to);
+//            }
+//
+//            Set<QuoteDTO> finalResults = new LinkedHashSet<>(); // <--- FIX: Set<QuoteDTO>
+//
+//            if ("underwriter".equalsIgnoreCase(listingType)) {
+//                // Underwriter listing: isAccepted = "Todo" or "accept"
+//                ObjectNode filterJson = mutableJson.deepCopy();
+//                
+//                filterJson.put("isAccepted", "Todo");
+//                log.info("Filtering for underwriter with isAccepted: Todo");
+//                List<QuoteDTO> partialResultsTodo = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
+//                finalResults.addAll(partialResultsTodo);
+//
+//                filterJson.put("isAccepted", "accept");
+//                log.info("Filtering for underwriter with isAccepted: accept");
+//                List<QuoteDTO> partialResultsAccept = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
+//                finalResults.addAll(partialResultsAccept);
+//
+//            } else if ("quoteHistory".equalsIgnoreCase(listingType)) {
+//                // Only filter by isAccepted = "accept"
+//                ObjectNode filterJson = mutableJson.deepCopy();
+//                filterJson.put("isAccepted", "accept");
+//
+//                log.info("Filtering for quote history with isAccepted: accept");
+//
+//                List<QuoteDTO> partialResults = (List<QuoteDTO>) quoteService.filterData(filterJson, page, size);
+//                finalResults.addAll(partialResults);
+//
+//            } else {
+//                return ResponseEntity.badRequest().body("Invalid listing type");
+//            }
+//
+//
+//            // Convert Set to List and sort by 'quoteCreatedDate' to show latest first
+//            List<QuoteDTO> resultList = new ArrayList<>(finalResults);
+//
+//            resultList.sort(Comparator.comparing(QuoteDTO::getQuoteCreatedDate).reversed());
+//
+//            log.info("Filtered {} results", resultList.size());
+//
+//            return ResponseEntity.ok(resultList);
+//
+//        } catch (Exception ex) {
+//            log.error("Error filtering quotes", ex);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(Collections.singletonMap("error", ex.getMessage()));
+//        }
+//    }
+
     @PostMapping("/Filter")
     public ResponseEntity<?> filter(
-            @RequestBody JsonNode json, 
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "1000") int size) {
+        @RequestBody JsonNode json,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "1000") int size,
+        @RequestParam(value = "dateFilter", required = false) String dateFilter,
+        @RequestParam(value = "from", required = false) String from,
+        @RequestParam(value = "to", required = false) String to,
+        @RequestParam(value = "listingType", required = true) String listingType) {
 
         try {
-            ObjectNode mutableJson = json.deepCopy();
+            if (json == null) {
+                return ResponseEntity.badRequest().body("Request body cannot be null");
+            }
+
+            ObjectNode mutableJson = (ObjectNode) json.deepCopy();
             mutableJson.remove("page");
             mutableJson.remove("size");
-            mutableJson.put("deleted","false");
+            mutableJson.put("deleted", "false");
 
-            log.info("Filter request received with JSON: {}", mutableJson.toString());
-            
-            return ResponseEntity.ok().body(quoteService.filterData(mutableJson, page, size));
+            // Apply custom date filter
+            if ("custom".equalsIgnoreCase(dateFilter) && from != null && to != null) {
+                mutableJson.put("quoteCreatedDate", from + "__" + to);
+                log.info("Applying custom date filter: {} to {}", from, to);
+            }
+
+            Set<QuoteDTO> finalResults = new LinkedHashSet<>();
+
+            if ("underwriter".equalsIgnoreCase(listingType)) {
+                ObjectNode filterJsonTodo = mutableJson.deepCopy();
+                filterJsonTodo.put("isAccepted", "Todo");
+                List<QuoteDTO> resultsTodo = (List<QuoteDTO>) quoteService.filterData(filterJsonTodo);
+                finalResults.addAll(resultsTodo);
+
+                ObjectNode filterJsonAccept = mutableJson.deepCopy();
+                filterJsonAccept.put("isAccepted", "accept");
+                List<QuoteDTO> resultsAccept = (List<QuoteDTO>) quoteService.filterData(filterJsonAccept);
+                finalResults.addAll(resultsAccept);
+
+            } else if ("quoteHistory".equalsIgnoreCase(listingType)) {
+                ObjectNode filterJson = mutableJson.deepCopy();
+                filterJson.put("isAccepted", "accept");
+                List<QuoteDTO> results = (List<QuoteDTO>) quoteService.filterData(filterJson);
+                finalResults.addAll(results);
+            } else {
+                return ResponseEntity.badRequest().body("Invalid listing type");
+            }
+
+            // Convert Set to List, sort by quoteCreatedDate descending
+            List<QuoteDTO> resultList = new ArrayList<>(finalResults);
+            resultList.sort(Comparator.comparing(QuoteDTO::getQuoteCreatedDate).reversed());
+
+            // Get total count before pagination
+            int totalCount = resultList.size();
+
+            // Paginate manually
+            int start = page * size;
+            int end = Math.min(start + size, totalCount);
+
+            List<QuoteDTO> paginatedResult;
+            if (start <= end) {
+                paginatedResult = resultList.subList(start, end);
+            } else {
+                paginatedResult = Collections.emptyList(); // avoid IndexOutOfBounds
+            }
+
+            // Create PaginatedResponse
+            PaginatedResponse<QuoteDTO> response = new PaginatedResponse<>(paginatedResult, totalCount);
+            return ResponseEntity.ok(response);
+
         } catch (Exception ex) {
             log.error("Error filtering quotes", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("error", ex.getMessage()));
         }
     }
-    
-    @Transactional
-    @PutMapping("/FilterSource")
-    public ResponseEntity<QuoteDTOCustom> update(@RequestBody QuoteDTOCustom quoteDTOCustom) {
-        if (quoteDTOCustom == null || quoteDTOCustom.getEnqSeqNo() == null || quoteDTOCustom.getUserSeqNo() == null || quoteDTOCustom.getIsAccepted() == null) {
-            log.error("Bad request: Missing required fields.");
-            return ResponseEntity.badRequest().build();
-        }
-
-        try {
-            List<QuoteDAO> enquiryQuotes = quoteRepositoryCustom.findByEnqSeqNo(quoteDTOCustom.getEnqSeqNo());
-
-            if (enquiryQuotes == null || enquiryQuotes.isEmpty()) {
-                log.error("No quotes found for EnqSeqNo: {}", quoteDTOCustom.getEnqSeqNo());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-
-            for (QuoteDAO quote : enquiryQuotes) {
-                if (quote.getUserSeqNo() == null) {
-                    log.error("Found quote with null UserSeqNo for EnqSeqNo: {}", quoteDTOCustom.getEnqSeqNo());
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                }
-
-                // Use the value provided in the request body
-                if (quoteDTOCustom.getUserSeqNo().equals(quote.getUserSeqNo())) {
-                    quote.setIsAccepted(quoteDTOCustom.getIsAccepted());
-                } else {
-                    // Rejecting all others if one is accepted
-                    if ("accept".equals(quoteDTOCustom.getIsAccepted())) {
-                        quote.setIsAccepted("reject");
-                    }
-                }
-            }
-
-            quoteRepositoryCustom.saveAll(enquiryQuotes);
-
-            // Fetch and return the updated quote
-            return quoteRepositoryCustom.findByEnqSeqNoAndUserSeqNo(
-                    quoteDTOCustom.getEnqSeqNo(),
-                    quoteDTOCustom.getUserSeqNo())
-                .map(acceptedQuote -> ResponseEntity.ok().body(QuoteMapperCustom.INSTANCE.quoteDAOToQuoteDTOCustom(acceptedQuote)))
-                .orElseGet(() -> {
-                    log.error("Quote not found for EnqSeqNo: {}, UserSeqNo: {}", quoteDTOCustom.getEnqSeqNo(), quoteDTOCustom.getUserSeqNo());
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-                });
-
-        } catch (Exception e) {
-            log.error("Error updating quote status for EnqSeqNo: {}, UserSeqNo: {}. Error: {}", 
-                      quoteDTOCustom.getEnqSeqNo(), quoteDTOCustom.getUserSeqNo(), e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 
 
+	@Transactional
+	@PutMapping("/isAccepted")
+	public ResponseEntity<?> updateQuoteStatus(@RequestBody QuoteDTOCustom quoteDTOCustom) {
+		try {
+			// 1. Validate input
+			if (quoteDTOCustom == null || quoteDTOCustom.getEnqSeqNo() == null || quoteDTOCustom.getUserSeqNo() == null
+					|| quoteDTOCustom.getIsAccepted() == null) {
+				return ResponseEntity.badRequest()
+						.body(Collections.singletonMap("error", "Missing required fields in request"));
+			}
 
-    @GetMapping("/Stats")
-    public ResponseEntity<?> getBrokerCode( @RequestParam int userId) {
-        String sql = "SELECT * FROM wn_quote_summary WHERE user_seq_no="+ userId;
-        List<Object[]> queryResult = em.createNativeQuery(sql).getResultList();
-        
-        List<SummaryDTO> result = queryResult.stream()
-                .map(row -> new SummaryDTO(
-                        ((Number) row[0]).longValue(),  
-                        ((Number) row[1]).longValue(),  
-                        (BigDecimal) row[2],  
-                        (BigDecimal) row[3],  
-                        (BigDecimal) row[4],  
-                        (String) row[5]       
-                ))
-                .toList();
+			// 2. Fetch all quotes for this enquiry
+			List<QuoteDAO> allQuotes = quoteRepositoryCustom.findByEnqSeqNo(quoteDTOCustom.getEnqSeqNo());
+			if (allQuotes.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error",
+						"No quotes found for EnqSeqNo: " + quoteDTOCustom.getEnqSeqNo()));
+			}
 
-        return ResponseEntity.ok().body(result);
-    }
+			// 3. Find the "Todo" quote for this user
+			QuoteDAO quoteToUpdate = allQuotes.stream()
+					.filter(q -> "Todo".equalsIgnoreCase(q.getIsAccepted())
+							&& quoteDTOCustom.getUserSeqNo().equals(q.getUserSeqNo()))
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException(
+							String.format("Todo quote not found for UserSeqNo %d and EnqSeqNo %d. Available: %s",
+									quoteDTOCustom.getUserSeqNo(), quoteDTOCustom.getEnqSeqNo(),
+									allQuotes.stream().map(q -> q.getUserSeqNo() + ":" + q.getIsAccepted())
+											.collect(Collectors.joining(", ")))));
 
-    
-    
-    
-   
-   
+			// 4. Update quotes
+			if ("accept".equalsIgnoreCase(quoteDTOCustom.getIsAccepted())) {
+				// Accept this quote, reject others (only those in Todo state)
+				allQuotes.forEach(quote -> {
+					if ("Todo".equalsIgnoreCase(quote.getIsAccepted())) {
+						if (quoteDTOCustom.getUserSeqNo().equals(quote.getUserSeqNo())) {
+							quote.setIsAccepted("accept");
+						} else {
+							quote.setIsAccepted("reject");
+						}
+					}
+				});
+			} else {
+				// Just update this Todo quote to reject/other status
+				quoteToUpdate.setIsAccepted(quoteDTOCustom.getIsAccepted());
+			}
+
+			// 5. Find the latest accepted quote
+			Optional<QuoteDAO> latestAcceptedQuote = allQuotes.stream()
+					.filter(q -> "accept".equalsIgnoreCase(q.getIsAccepted()) && q.getQuoteCreatedDate() != null)
+					.max(Comparator.comparing(QuoteDAO::getQuoteCreatedDate));
+
+			// 6. Update currUnderwriter based on latest accepted quote
+			latestAcceptedQuote.ifPresent(latestQuote -> {
+				allQuotes.forEach(q -> q.setCurrUnderwriter(latestQuote.getQuoteSeqNo()));
+			});
+
+			// 7. Save all updates
+			quoteRepositoryCustom.saveAll(allQuotes);
+
+			// 8. Return response
+			return ResponseEntity.ok(QuoteMapperCustom.INSTANCE.quoteDAOToQuoteDTOCustom(quoteToUpdate));
+
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			log.error("Validation error: {}", e.getMessage());
+			return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+		} catch (EntityNotFoundException e) {
+			log.error("Not found error: {}", e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", e.getMessage()));
+		} catch (Exception e) {
+			log.error("Unexpected error: {}", e.getMessage(), e);
+			return ResponseEntity.internalServerError()
+					.body(Collections.singletonMap("error", "Internal server error"));
+		}
+	}
+
 }

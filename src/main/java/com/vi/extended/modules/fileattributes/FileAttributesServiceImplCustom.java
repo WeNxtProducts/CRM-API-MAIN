@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,8 +30,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FileAttributesServiceImplCustom implements FileAttributesServiceCustom {
 	
-	  @Autowired
-	    private FileAttributesRepositoryCustom filerepo;
+	@Autowired
+	private FileAttributesRepositoryCustom filerepo;
 	
 	@Value("${spring.dms.dms_status}")
 	private String dmsStatusProperty;
@@ -43,7 +44,7 @@ public class FileAttributesServiceImplCustom implements FileAttributesServiceCus
 	    File moduleDirectory = new File(baseDirectory);
 
 	    if (!moduleDirectory.exists()) {
-	        moduleDirectory.mkdirs(); // Ensure the directory exists
+	        moduleDirectory.mkdirs(); 
 	    }
 
 	    return baseDirectory + File.separator + fileName; // Construct the new file path
@@ -117,7 +118,7 @@ public class FileAttributesServiceImplCustom implements FileAttributesServiceCus
 		return filePath;
 	}
 	@Override
-	public String uploadMultipleDocuments(List<Map<String, Object>> fileRequests) {
+	public String uploadMultipleDocuments(List<Map<String, Object>> fileRequests) throws JSONException {
 		JSONArray fileResponses = new JSONArray();
 		JSONObject overallResponse = new JSONObject();
 		for (Map<String, Object> fileRequest : fileRequests) {
